@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { AppShell } from "@/components/app-shell";
 import { BidOutcomeIntelligenceBoard } from "@/components/bid-outcome-intelligence-board";
 import { Card } from "@/components/ui";

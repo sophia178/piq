@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from "next/server";
 import { AuthSchema, createServerSupabaseClient, trackAuditEvent } from "@/lib/platform";
 import { env } from "@/lib/env";

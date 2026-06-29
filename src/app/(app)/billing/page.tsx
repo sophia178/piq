@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { AppShell } from "@/components/app-shell";
 import { Button, Card } from "@/components/ui";
 import { planCatalog } from "@/lib/platform";

@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { GrowthEngineBoard } from "@/components/growth-engine-board";
 import { AppShell } from "@/components/app-shell";
 import { Badge, Card } from "@/components/ui";

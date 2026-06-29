@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { AppShell } from "@/components/app-shell";
 import { KnowledgeEngineBoard } from "@/components/knowledge-engine-board";
 import { Card } from "@/components/ui";

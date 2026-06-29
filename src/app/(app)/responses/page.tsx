@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { AppShell } from "@/components/app-shell";
 import { Badge, Card } from "@/components/ui";
 import { demoResponses } from "@/lib/platform";

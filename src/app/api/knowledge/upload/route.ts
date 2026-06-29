@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from "next/server";
 import { indexKnowledgeDocument, KnowledgeUploadSchema } from "@/lib/knowledge";
 import { createServiceSupabaseClient, extractTextFromFile, trackAuditEvent } from "@/lib/platform";

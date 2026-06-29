@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { OpportunityDiscoveryBoard } from "@/components/opportunity-discovery-board";
 import { AppShell } from "@/components/app-shell";
 import { Card } from "@/components/ui";

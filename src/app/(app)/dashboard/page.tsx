@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import type { Route } from "next";
 import { AppShell } from "@/components/app-shell";
 import { Badge, Button, Card } from "@/components/ui";

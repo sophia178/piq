@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { AppShell } from "@/components/app-shell";
 import { PredictBoard } from "@/components/predict-board";
 import { Card } from "@/components/ui";
