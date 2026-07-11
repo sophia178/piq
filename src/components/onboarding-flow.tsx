@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button, Card, Input } from "@/components/ui";
 
@@ -28,6 +28,7 @@ export function OnboardingFlow() {
   const searchParams = useSearchParams();
   const initialStep = clampStep(Number(searchParams.get("step") ?? "1"));
   const statusParam = searchParams.get("status");
+  const savingOrganizationRef = useRef(false);
 
   const [activeStep, setActiveStep] = useState<number>(initialStep);
   const [loading, setLoading] = useState(true);
@@ -78,6 +79,10 @@ export function OnboardingFlow() {
 
   useEffect(() => {
     if (!status) return;
+    if (savingOrganizationRef.current) {
+      savingOrganizationRef.current = false;
+      return;
+    }
     if (!status.organization && activeStep > 2) {
       router.replace("/onboarding?step=2");
     }
@@ -170,10 +175,19 @@ export function OnboardingFlow() {
                 setError("Unable to save organisation details.");
                 return;
               }
-              const statusResponse = await fetch("/api/onboarding/status", { cache: "no-store" });
-              const statusPayload = (await statusResponse.json()) as OnboardingStatus | { error?: string };
-              if (statusResponse.ok) {
-                setStatus(statusPayload as OnboardingStatus);
+              savingOrganizationRef.current = true;
+              if (status) {
+                setStatus({
+                  ...status,
+                  organization: {
+                    id: status.organization?.id ?? "temp-id",
+                    companyName: String(formData.get("companyName") ?? ""),
+                    industry: String(formData.get("industry") ?? ""),
+                    website: String(formData.get("website") ?? "") || null,
+                    employeeCount: String(formData.get("employeeCount") ?? ""),
+                    planTier: status.organization?.planTier ?? "",
+                  },
+                });
               }
               router.push("/onboarding?step=3");
             }}
