@@ -1,6 +1,6 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from "next/server";
-import { createCheckoutSession, createServerSupabaseClient, trackAuditEvent } from "@/lib/platform";
+import { createCheckoutSession, createServerSupabaseClient, createServiceSupabaseClient, trackAuditEvent } from "@/lib/platform";
 
 export async function POST(request: NextRequest) {
   const tier = request.nextUrl.searchParams.get("tier");
@@ -19,7 +19,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "You must be logged in to start checkout." }, { status: 401 });
   }
 
-  const { data: membership } = await supabase
+  const service = createServiceSupabaseClient();
+  if (!service) {
+    return NextResponse.json({ error: "Supabase is not configured." }, { status: 503 });
+  }
+
+  const { data: membership } = await service
     .from("organization_members")
     .select("organization_id")
     .eq("user_id", userData.user.id)

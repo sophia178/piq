@@ -1,19 +1,19 @@
 export const dynamic = 'force-dynamic';
 import { NextResponse } from "next/server";
-import { createServerSupabaseClient, createServiceSupabaseClient } from "@/lib/platform";
+import { createServiceSupabaseClient } from "@/lib/platform";
 
 export async function GET() {
-  const supabase = await createServerSupabaseClient();
-  if (!supabase) {
+  const service = createServiceSupabaseClient();
+  if (!service) {
     return NextResponse.json({ error: "Supabase is not configured." }, { status: 503 });
   }
 
-  const { data: userData, error: userError } = await supabase.auth.getUser();
+  const { data: userData, error: userError } = await service.auth.getUser();
   if (userError || !userData?.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { data: membership } = await supabase
+  const { data: membership } = await service
     .from("organization_members")
     .select("organization_id")
     .eq("user_id", userData.user.id)
@@ -30,17 +30,16 @@ export async function GET() {
   }
 
   const [{ data: organization }, { data: subscription }] = await Promise.all([
-    supabase
+    service
       .from("organizations")
       .select("id, company_name, industry, website, employee_count, plan_tier")
       .eq("id", organizationId)
       .maybeSingle(),
-    supabase.from("subscriptions").select("status, stripe_price_id, current_period_end").eq("organization_id", organizationId).maybeSingle(),
+    service.from("subscriptions").select("status, stripe_price_id, current_period_end").eq("organization_id", organizationId).maybeSingle(),
   ]);
 
-  const service = createServiceSupabaseClient();
   const { data: latestSubscription } =
-    service && !subscription
+    !subscription
       ? await service.from("subscriptions").select("status, stripe_price_id, current_period_end").eq("organization_id", organizationId).maybeSingle()
       : { data: null };
 
