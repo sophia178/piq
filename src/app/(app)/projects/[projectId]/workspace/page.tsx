@@ -7,15 +7,33 @@ import { getBidWorkspaceSnapshot } from "@/lib/bid-workspace";
 import { getProjectPredictionSummary } from "@/lib/predict";
 import { getActiveOrganizationContext } from "@/lib/platform";
 
+const createTimeout = (ms: number) => new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), ms));
+
 export default async function WorkspacePage({ params }: { params: Promise<{ projectId: string }> }) {
   const { projectId } = await params;
   const organization = await getActiveOrganizationContext();
   const organizationId = organization.id === "org_demo" ? undefined : organization.id;
-  const [snapshot, reviewSnapshot, prediction] = await Promise.all([
-    getBidWorkspaceSnapshot(projectId, organizationId),
-    getBidReviewSnapshot(projectId, organizationId),
-    getProjectPredictionSummary(projectId, organizationId),
-  ]);
+  
+  let snapshot: any = {};
+  let reviewSnapshot: any = {};
+  let prediction: any = {};
+  
+  try {
+    const [snap, reviewSnap, pred] = await Promise.race([
+      Promise.all([
+        getBidWorkspaceSnapshot(projectId, organizationId),
+        getBidReviewSnapshot(projectId, organizationId),
+        getProjectPredictionSummary(projectId, organizationId),
+      ]),
+      createTimeout(10000)
+    ]) as any[];
+    
+    if (snap) snapshot = snap;
+    if (reviewSnap) reviewSnapshot = reviewSnap;
+    if (pred) prediction = pred;
+  } catch (error) {
+    console.error('Failed to load workspace data:', error);
+  }
 
   return (
     <AppShell title="Workspace" eyebrow="Submission" organization={organization}>

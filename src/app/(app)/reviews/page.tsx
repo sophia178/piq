@@ -11,10 +11,22 @@ function formatDate(value?: string | null) {
   return new Intl.DateTimeFormat("en-GB", { dateStyle: "medium" }).format(new Date(value));
 }
 
+const createTimeout = (ms: number) => new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), ms));
+
 export default async function ReviewsPage() {
   const organization = await getActiveOrganizationContext();
   const organizationId = organization.id === "org_demo" ? undefined : organization.id;
-  const snapshot = await getBidReviewDashboardSnapshot(organizationId);
+  
+  let snapshot: any = { metrics: { projectsReviewed: 0, averageOverallBidScore: 0, averageReadinessScore: 0, criticalFindings: 0, improvementOpportunities: 0 }, projects: [] };
+  
+  try {
+    snapshot = await Promise.race([
+      getBidReviewDashboardSnapshot(organizationId),
+      createTimeout(10000)
+    ]);
+  } catch (error) {
+    console.error('Failed to load reviews snapshot:', error);
+  }
 
   return (
     <AppShell title="Reviews" eyebrow="Quality" organization={organization}>
@@ -43,7 +55,7 @@ export default async function ReviewsPage() {
 
       <section className="mt-8 space-y-5">
         {snapshot.projects.length > 0 ? (
-          snapshot.projects.map((project) => (
+          snapshot.projects.map((project: any) => (
             <Card key={project.projectId} className="p-5">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                 <div>
@@ -89,7 +101,7 @@ export default async function ReviewsPage() {
                 </div>
                 <div className="mt-3 space-y-3">
                   {project.topFindings.length > 0 ? (
-                    project.topFindings.map((finding) => (
+                    project.topFindings.map((finding: any) => (
                       <div key={finding.id} className="rounded-2xl border border-white/10 bg-slate-950/30 p-4">
                         <div className="flex items-center justify-between gap-3">
                           <p className="text-sm font-semibold text-white">{finding.issue}</p>
