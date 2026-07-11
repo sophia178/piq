@@ -79,10 +79,11 @@ export function OnboardingFlow() {
 
   useEffect(() => {
     if (!status) return;
-    if (savingOrganizationRef.current) {
+    if (status.organization) {
       savingOrganizationRef.current = false;
       return;
     }
+    if (savingOrganizationRef.current) return;
     if (!status.organization && activeStep > 2) {
       router.replace("/onboarding?step=2");
     }
