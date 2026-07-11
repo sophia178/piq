@@ -1,17 +1,24 @@
 export const dynamic = 'force-dynamic';
 import type { Route } from "next";
+import { redirect } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { Badge, Button, Card } from "@/components/ui";
 import { getBidReviewDashboardSnapshot } from "@/lib/bid-review";
 import { getKnowledgeEngineSnapshot } from "@/lib/knowledge";
 import { getBidOutcomeIntelligenceSnapshot, getOpportunityDiscoverySnapshot } from "@/lib/opportunities";
-import { getActiveOrganizationContext, getDashboardSnapshot } from "@/lib/platform";
+import { getActiveOrganizationContext, getDashboardSnapshot, getUserSubscriptionStatus } from "@/lib/platform";
 import { getPredictEngineSnapshot } from "@/lib/predict";
 import { getSubmissionExportDashboardSnapshot } from "@/lib/submission-export";
 import { formatCurrency, formatPercent } from "@/lib/utils";
 
 export default async function DashboardPage() {
   const organization = await getActiveOrganizationContext();
+  const subscription = await getUserSubscriptionStatus();
+  
+  if (!subscription?.isActive) {
+    redirect("/billing");
+  }
+  
   const organizationId = organization.id === "org_demo" ? undefined : organization.id;
   const snapshot = getDashboardSnapshot();
   const opportunitySnapshot = await getOpportunityDiscoverySnapshot(organizationId);

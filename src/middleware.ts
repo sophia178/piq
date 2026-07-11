@@ -49,9 +49,8 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // For protected routes, check organization and subscription
+  // For protected routes, check organization only
   if (protectedRoutes.some((route) => pathname.startsWith(route))) {
-    // Check if user has organization
     const { data: membership } = await supabase
       .from("organization_members")
       .select("organization_id")
@@ -61,19 +60,6 @@ export async function middleware(request: NextRequest) {
 
     if (!membership?.organization_id) {
       return NextResponse.redirect(new URL("/onboarding?step=2", request.url));
-    }
-
-    // Check if user has active subscription
-    const { data: subscription } = await supabase
-      .from("subscriptions")
-      .select("status")
-      .eq("organization_id", membership.organization_id)
-      .maybeSingle();
-
-    const hasActiveSubscription = subscription?.status === "active" || subscription?.status === "trialing";
-
-    if (!hasActiveSubscription) {
-      return NextResponse.redirect(new URL("/billing", request.url));
     }
   }
 
