@@ -42,5 +42,5 @@ export async function POST(request: NextRequest) {
 
   await trackAuditEvent({ action: "billing.checkout_started", entityType: "subscription", metadata: { tier } });
 
-  return NextResponse.redirect(session.url);
+  return NextResponse.json({ url: session.url });
 }

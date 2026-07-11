@@ -231,7 +231,15 @@ export function OnboardingFlow() {
               <div key={plan.tier} className="rounded-2xl border border-white/10 bg-white/5 p-4">
                 <p className="text-sm font-semibold text-white">{plan.name}</p>
                 <p className="mt-3 text-2xl font-semibold text-white">{plan.price}</p>
-                <form action={`/api/stripe/checkout?tier=${plan.tier}`} method="post" className="mt-6">
+                <form
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    const res = await fetch(`/api/stripe/checkout?tier=${plan.tier}`, { method: "POST" });
+                    const data = (await res.json()) as { url?: string; error?: string };
+                    if (data.url) window.location.href = data.url;
+                  }}
+                  className="mt-6"
+                >
                   <Button type="submit" className="w-full">
                     Get Started
                   </Button>
