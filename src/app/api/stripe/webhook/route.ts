@@ -42,9 +42,10 @@ export async function POST(request: NextRequest) {
     const stripeSubscriptionId = typeof session.subscription === "string" ? session.subscription : session.subscription?.id ?? null;
 
     if (organizationId && stripeSubscriptionId) {
-      const subscription = await stripe.subscriptions.retrieve(stripeSubscriptionId);
+      const subscription = (await stripe.subscriptions.retrieve(stripeSubscriptionId)) as any;
       const priceId = subscription.items.data[0]?.price?.id ?? null;
       const tier = resolvePlanTier(priceId);
+      const currentPeriodEnd = subscription.current_period_end ? new Date(subscription.current_period_end * 1000).toISOString() : null;
 
       await supabase.from("subscriptions").upsert(
         {
@@ -53,7 +54,7 @@ export async function POST(request: NextRequest) {
           stripe_subscription_id: stripeSubscriptionId,
           stripe_price_id: priceId,
           status: subscription.status,
-          current_period_end: null,
+          current_period_end: currentPeriodEnd,
         },
         { onConflict: "stripe_subscription_id" },
       );
@@ -65,12 +66,13 @@ export async function POST(request: NextRequest) {
   }
 
   if (event.type === "customer.subscription.updated") {
-    const subscription = event.data.object as Stripe.Subscription;
+    const subscription = event.data.object as any;
     const stripeSubscriptionId = subscription.id;
     const stripeCustomerId = typeof subscription.customer === "string" ? subscription.customer : subscription.customer?.id ?? null;
     const organizationId = (subscription.metadata?.organization_id as string | undefined) ?? null;
     const priceId = subscription.items.data[0]?.price?.id ?? null;
     const tier = resolvePlanTier(priceId);
+    const currentPeriodEnd = subscription.current_period_end ? new Date(subscription.current_period_end * 1000).toISOString() : null;
 
     if (organizationId) {
       await supabase.from("subscriptions").upsert(
@@ -80,7 +82,7 @@ export async function POST(request: NextRequest) {
           stripe_subscription_id: stripeSubscriptionId,
           stripe_price_id: priceId,
           status: subscription.status,
-          current_period_end: null,
+          current_period_end: currentPeriodEnd,
         },
         { onConflict: "stripe_subscription_id" },
       );
