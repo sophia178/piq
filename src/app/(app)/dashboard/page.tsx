@@ -24,12 +24,12 @@ export default async function DashboardPage() {
     redirect("/login");
   }
   
-  const service = createServiceSupabaseClient();
-  if (!service) {
-    redirect("/billing");
+  let supabaseClient = createServiceSupabaseClient();
+  if (!supabaseClient) {
+    supabaseClient = serverSupabase;
   }
   
-  const { data: membership } = await service
+  const { data: membership } = await supabaseClient
     .from("organization_members")
     .select("organization_id")
     .eq("user_id", userData.user.id)
@@ -40,7 +40,7 @@ export default async function DashboardPage() {
     redirect("/billing");
   }
   
-  const { data: subscription } = await service
+  const { data: subscription } = await supabaseClient
     .from("subscriptions")
     .select("status")
     .eq("organization_id", membership.organization_id)
