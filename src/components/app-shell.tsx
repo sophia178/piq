@@ -2,39 +2,56 @@ import Link from "next/link";
 import type { Route } from "next";
 import type { ComponentProps, ReactNode } from "react";
 import { BarChart3, BookOpen, BrainCircuit, CreditCard, FileOutput, FileSearch, FolderKanban, LibraryBig, LayoutDashboard, Megaphone, Search, ShieldCheck, Trophy } from "lucide-react";
-import { demoOrganization, type OrganizationProfile } from "@/lib/platform";
+import { demoOrganization, type OrganizationProfile, getRecentProject } from "@/lib/platform";
 import { cn } from "@/lib/utils";
 import { Badge, Logo } from "@/components/ui";
 
 type LinkHref = ComponentProps<typeof Link>["href"];
 
-const navigation: Array<{ href: LinkHref; label: string; icon: typeof LayoutDashboard }> = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/opportunities", label: "Opportunities", icon: Search },
-  { href: "/predict", label: "Predict", icon: BrainCircuit },
-  { href: "/outcomes", label: "Outcomes", icon: Trophy },
-  { href: "/projects/proj_1/workspace" as Route, label: "Workspace", icon: FolderKanban },
-  { href: "/reviews", label: "Reviews", icon: FileSearch },
-  { href: "/exports", label: "Exports", icon: FileOutput },
-  { href: "/knowledge", label: "Knowledge", icon: BookOpen },
-  { href: "/responses", label: "Response Library", icon: LibraryBig },
-  { href: "/growth", label: "Growth Engine", icon: Megaphone },
-  { href: "/billing", label: "Billing", icon: CreditCard },
-  { href: "/admin", label: "Admin", icon: BarChart3 },
-];
-
 export function AppShell({
   title,
   eyebrow,
   organization,
+  workspaceHref,
   children,
 }: {
   title: string;
   eyebrow: string;
   organization?: OrganizationProfile;
+  workspaceHref?: LinkHref;
   children: ReactNode;
 }) {
   const activeOrganization = organization ?? demoOrganization;
+
+  const getNavigation = async () => {
+    let workspaceLink = workspaceHref ?? "/dashboard";
+    
+    if (!workspaceHref) {
+      try {
+        const recentProject = await getRecentProject();
+        if (recentProject) {
+          workspaceLink = `/projects/${recentProject.id}/workspace` as Route;
+        }
+      } catch (error) {
+        console.error('Failed to get recent project:', error);
+      }
+    }
+
+    return [
+      { href: "/dashboard" as Route, label: "Dashboard", icon: LayoutDashboard },
+      { href: "/opportunities" as Route, label: "Opportunities", icon: Search },
+      { href: "/predict" as Route, label: "Predict", icon: BrainCircuit },
+      { href: "/outcomes" as Route, label: "Outcomes", icon: Trophy },
+      { href: workspaceLink, label: "Workspace", icon: FolderKanban },
+      { href: "/reviews" as Route, label: "Reviews", icon: FileSearch },
+      { href: "/exports" as Route, label: "Exports", icon: FileOutput },
+      { href: "/knowledge" as Route, label: "Knowledge", icon: BookOpen },
+      { href: "/responses" as Route, label: "Response Library", icon: LibraryBig },
+      { href: "/growth" as Route, label: "Growth Engine", icon: Megaphone },
+      { href: "/billing" as Route, label: "Billing", icon: CreditCard },
+      { href: "/admin" as Route, label: "Admin", icon: BarChart3 },
+    ];
+  };
 
   return (
     <div className="app-shell-grid min-h-screen">
@@ -51,19 +68,7 @@ export function AppShell({
           </div>
         </div>
         <nav className="mt-8 space-y-1">
-          {navigation.map(({ href, label, icon: Icon }) => (
-            <Link
-              key={label}
-              href={href}
-              className={cn(
-                "flex items-center gap-3 rounded-2xl px-4 py-3 text-sm text-slate-300 transition hover:bg-white/5 hover:text-white",
-                title === label ? "bg-teal-400/10 text-white ring-1 ring-teal-300/20" : "",
-              )}
-            >
-              <Icon className="h-4 w-4" />
-              <span>{label}</span>
-            </Link>
-          ))}
+          <NavigationLinks title={title} workspaceHref={workspaceHref} />
         </nav>
         <div className="mt-8 rounded-3xl border border-teal-300/10 bg-teal-400/5 p-4">
           <div className="flex items-center gap-3">
@@ -86,5 +91,53 @@ export function AppShell({
         {children}
       </main>
     </div>
+  );
+}
+
+async function NavigationLinks({ title, workspaceHref }: { title: string; workspaceHref?: LinkHref }) {
+  let workspaceLink = workspaceHref ?? "/dashboard";
+  
+  if (!workspaceHref) {
+    try {
+      const recentProject = await getRecentProject();
+      if (recentProject) {
+        workspaceLink = `/projects/${recentProject.id}/workspace` as Route;
+      }
+    } catch (error) {
+      console.error('Failed to get recent project:', error);
+    }
+  }
+
+  const navigation: Array<{ href: LinkHref; label: string; icon: typeof LayoutDashboard }> = [
+    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/opportunities", label: "Opportunities", icon: Search },
+    { href: "/predict", label: "Predict", icon: BrainCircuit },
+    { href: "/outcomes", label: "Outcomes", icon: Trophy },
+    { href: workspaceLink, label: "Workspace", icon: FolderKanban },
+    { href: "/reviews", label: "Reviews", icon: FileSearch },
+    { href: "/exports", label: "Exports", icon: FileOutput },
+    { href: "/knowledge", label: "Knowledge", icon: BookOpen },
+    { href: "/responses", label: "Response Library", icon: LibraryBig },
+    { href: "/growth", label: "Growth Engine", icon: Megaphone },
+    { href: "/billing", label: "Billing", icon: CreditCard },
+    { href: "/admin", label: "Admin", icon: BarChart3 },
+  ];
+
+  return (
+    <>
+      {navigation.map(({ href, label, icon: Icon }) => (
+        <Link
+          key={label}
+          href={href}
+          className={cn(
+            "flex items-center gap-3 rounded-2xl px-4 py-3 text-sm text-slate-300 transition hover:bg-white/5 hover:text-white",
+            title === label ? "bg-teal-400/10 text-white ring-1 ring-teal-300/20" : "",
+          )}
+        >
+          <Icon className="h-4 w-4" />
+          <span>{label}</span>
+        </Link>
+      ))}
+    </>
   );
 }

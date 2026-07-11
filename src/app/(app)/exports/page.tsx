@@ -11,37 +11,41 @@ export default async function ExportsPage({
 }: {
   searchParams?: Promise<{ projectId?: string; templateId?: string }>;
 }) {
-  const params = (await searchParams) ?? {};
-  
   let dashboard: any = { organization: { id: "org_demo" }, projects: [] };
   let workspace: any = { projects: [] };
-  
+
   try {
-    dashboard = await Promise.race([
-      getSubmissionExportDashboardSnapshot(),
-      createTimeout(10000)
-    ]);
+    const params = (await searchParams) ?? {};
+    
+    try {
+      dashboard = await Promise.race([
+        getSubmissionExportDashboardSnapshot(),
+        createTimeout(10000)
+      ]);
+    } catch (error) {
+      console.error('Failed to load exports dashboard:', error);
+    }
+    
+    const selectedProjectId = params.projectId ?? dashboard.projects[0]?.projectId ?? "proj_1";
+    
+    try {
+      workspace = await Promise.race([
+        getSubmissionExportWorkspaceSnapshot(
+          selectedProjectId,
+          dashboard.organization.id === "org_demo" ? undefined : dashboard.organization.id,
+          params.templateId,
+        ),
+        createTimeout(10000)
+      ]);
+    } catch (error) {
+      console.error('Failed to load exports workspace:', error);
+    }
   } catch (error) {
-    console.error('Failed to load exports dashboard:', error);
-  }
-  
-  const selectedProjectId = params.projectId ?? dashboard.projects[0]?.projectId ?? "proj_1";
-  
-  try {
-    workspace = await Promise.race([
-      getSubmissionExportWorkspaceSnapshot(
-        selectedProjectId,
-        dashboard.organization.id === "org_demo" ? undefined : dashboard.organization.id,
-        params.templateId,
-      ),
-      createTimeout(10000)
-    ]);
-  } catch (error) {
-    console.error('Failed to load exports workspace:', error);
+    console.error('Failed to load exports page:', error);
   }
 
   return (
-    <AppShell title="Exports" eyebrow="Submission" organization={dashboard.organization}>
+    <AppShell title="Exports" eyebrow="Submission" organization={dashboard?.organization || { id: "org_demo", companyName: "Demo", industry: "Demo", website: null, employeeCount: "1-10", certifications: [], location: "Demo" }}>
       <div className="mb-5">
         <Card className="p-5">
           <p className="text-sm text-slate-300">

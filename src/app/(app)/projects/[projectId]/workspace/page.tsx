@@ -1,4 +1,6 @@
 export const dynamic = 'force-dynamic';
+import type { Route } from "next";
+import { redirect } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { Card } from "@/components/ui";
 import { WorkspaceBoard } from "@/components/workspace-board";
@@ -35,8 +37,12 @@ export default async function WorkspacePage({ params }: { params: Promise<{ proj
     console.error('Failed to load workspace data:', error);
   }
 
+  if (!snapshot?.project) {
+    redirect("/dashboard");
+  }
+
   return (
-    <AppShell title="Workspace" eyebrow="Submission" organization={organization}>
+    <AppShell title="Workspace" eyebrow="Submission" organization={organization} workspaceHref={`/projects/${projectId}/workspace` as Route}>
       <div className="mb-5">
         <Card className="p-5">
           <p className="text-sm text-slate-300">

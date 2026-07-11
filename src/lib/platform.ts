@@ -378,6 +378,39 @@ async function readPrompt(promptFile: string) {
   return readFile(join(process.cwd(), "src", "prompts", promptFile), "utf8");
 }
 
+export async function getRecentProject() {
+  try {
+    const supabase = await createServerSupabaseClient();
+    if (!supabase) return null;
+
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData?.user) return null;
+
+    const { data: membership } = await supabase
+      .from("organization_members")
+      .select("organization_id")
+      .eq("user_id", userData.user.id)
+      .limit(1)
+      .maybeSingle();
+
+    const organizationId = (membership?.organization_id as string | undefined) ?? null;
+    if (!organizationId) return null;
+
+    const { data } = await supabase
+      .from("projects")
+      .select("id")
+      .eq("organization_id", organizationId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    return data ? { id: data.id as string } : null;
+  } catch (error) {
+    console.error('Failed to get recent project:', error);
+    return null;
+  }
+}
+
 export async function runTenderAnalysis(text: string) {
   const requirements = heuristicRequirementExtraction(text);
   const compliance = buildComplianceSnapshot(requirements);
