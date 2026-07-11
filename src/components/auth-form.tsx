@@ -44,7 +44,17 @@ export function AuthForm({
         }}
       >
         {mode === "signup" ? <Input name="companyName" placeholder="Company name" required /> : null}
-        <Input name="email" type="email" placeholder="Work email" required />
+        <div className="space-y-2">
+          <Input name="email" type="email" placeholder="Work email" required />
+          {mode === "login" ? (
+            <p className="text-xs text-slate-400">
+              Can&apos;t access your email?{" "}
+              <a href="mailto:hello@pursuitiq.com" className="text-teal-300 transition hover:text-teal-200">
+                Contact support
+              </a>
+            </p>
+          ) : null}
+        </div>
         {mode !== "forgot-password" ? <Input name="password" type="password" placeholder="Password" required /> : null}
         <Button type="submit" className="w-full">
           {mode === "login" ? "Login" : mode === "signup" ? "Create account" : "Send reset link"}

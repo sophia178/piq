@@ -48,8 +48,9 @@ export function MarketingSiteShell({
         )}
       >
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 lg:px-8">
-          <MarketingLink href="/" className="shrink-0">
+          <MarketingLink href="/" className="flex shrink-0 items-center gap-3 transition hover:opacity-80">
             <PursuitIQMark />
+            <span className="hidden text-sm font-semibold text-white sm:inline">PursuitIQ</span>
           </MarketingLink>
 
           <nav className="hidden items-center gap-7 lg:flex">
