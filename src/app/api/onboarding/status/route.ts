@@ -1,16 +1,21 @@
 export const dynamic = 'force-dynamic';
 import { NextResponse } from "next/server";
-import { createServiceSupabaseClient } from "@/lib/platform";
+import { createServerSupabaseClient, createServiceSupabaseClient } from "@/lib/platform";
 
 export async function GET() {
-  const service = createServiceSupabaseClient();
-  if (!service) {
+  const supabase = await createServerSupabaseClient();
+  if (!supabase) {
     return NextResponse.json({ error: "Supabase is not configured." }, { status: 503 });
   }
 
-  const { data: userData, error: userError } = await service.auth.getUser();
+  const { data: userData, error: userError } = await supabase.auth.getUser();
   if (userError || !userData?.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const service = createServiceSupabaseClient();
+  if (!service) {
+    return NextResponse.json({ error: "Supabase is not configured." }, { status: 503 });
   }
 
   const { data: membership } = await service

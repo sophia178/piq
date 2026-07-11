@@ -55,7 +55,18 @@ export function AuthForm({
             </p>
           ) : null}
         </div>
-        {mode !== "forgot-password" ? <Input name="password" type="password" placeholder="Password" required /> : null}
+        {mode !== "forgot-password" ? (
+          <div className="space-y-2">
+            <Input name="password" type="password" placeholder="Password" required />
+            {mode === "login" ? (
+              <div className="text-right">
+                <a href="/forgot-password" className="text-xs text-teal-300 transition hover:text-teal-200">
+                  Forgot password?
+                </a>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
         <Button type="submit" className="w-full">
           {mode === "login" ? "Login" : mode === "signup" ? "Create account" : "Send reset link"}
         </Button>
