@@ -44,12 +44,12 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Auth-only routes (/onboarding, /billing) are allowed for authenticated users without subscription checks
+  // Auth-only routes (/onboarding, /billing) are allowed for authenticated users
   if (authOnlyRoutes.includes(pathname) || authOnlyRoutes.some((route) => pathname.startsWith(route + "/"))) {
     return NextResponse.next();
   }
 
-  // For protected routes, check organization only
+  // For protected routes, check organization only (subscription check is done in page components)
   if (protectedRoutes.some((route) => pathname.startsWith(route))) {
     const { data: membership } = await supabase
       .from("organization_members")
