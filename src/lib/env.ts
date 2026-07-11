@@ -84,12 +84,6 @@ export function assertProductionEnv() {
     supabaseAnonKey: "NEXT_PUBLIC_SUPABASE_ANON_KEY",
     supabaseServiceRoleKey: "SUPABASE_SERVICE_ROLE_KEY",
     openAiApiKey: "OPENAI_API_KEY",
-    stripeSecretKey: "STRIPE_SECRET_KEY",
-    stripeWebhookSecret: "STRIPE_WEBHOOK_SECRET",
-    stripePublishableKey: "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY",
-    stripeSoloPriceId: "STRIPE_SOLO_PRICE_ID",
-    stripeSmePriceId: "STRIPE_SME_PRICE_ID",
-    stripeAgencyPriceId: "STRIPE_AGENCY_PRICE_ID",
   };
 
   const requiredKeys = Object.keys(keyToEnvVar) as Array<keyof typeof keyToEnvVar>;
