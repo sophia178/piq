@@ -41,10 +41,16 @@ export async function middleware(request: NextRequest) {
     if (protectedRoutes.some((route) => pathname.startsWith(route))) {
       return NextResponse.redirect(new URL("/login", request.url));
     }
+    return NextResponse.next();
   }
 
-  // If authenticated, check for organization and subscription on protected routes
-  if (user && protectedRoutes.some((route) => pathname.startsWith(route))) {
+  // Auth-only routes (/onboarding, /billing) are allowed for authenticated users without subscription checks
+  if (authOnlyRoutes.includes(pathname) || authOnlyRoutes.some((route) => pathname.startsWith(route + "/"))) {
+    return NextResponse.next();
+  }
+
+  // For protected routes, check organization and subscription
+  if (protectedRoutes.some((route) => pathname.startsWith(route))) {
     // Check if user has organization
     const { data: membership } = await supabase
       .from("organization_members")
@@ -71,6 +77,7 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // Allow all other authenticated requests
   return NextResponse.next();
 }
 

@@ -175,12 +175,13 @@ export function OnboardingFlow() {
                 setError("Unable to save organisation details.");
                 return;
               }
+              const { organizationId } = (await response.json()) as { organizationId: string };
               savingOrganizationRef.current = true;
               if (status) {
                 setStatus({
                   ...status,
                   organization: {
-                    id: status.organization?.id ?? "temp-id",
+                    id: organizationId,
                     companyName: String(formData.get("companyName") ?? ""),
                     industry: String(formData.get("industry") ?? ""),
                     website: String(formData.get("website") ?? "") || null,
