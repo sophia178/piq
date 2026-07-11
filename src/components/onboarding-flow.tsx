@@ -170,6 +170,11 @@ export function OnboardingFlow() {
                 setError("Unable to save organisation details.");
                 return;
               }
+              const statusResponse = await fetch("/api/onboarding/status", { cache: "no-store" });
+              const statusPayload = (await statusResponse.json()) as OnboardingStatus | { error?: string };
+              if (statusResponse.ok) {
+                setStatus(statusPayload as OnboardingStatus);
+              }
               router.push("/onboarding?step=3");
             }}
           >

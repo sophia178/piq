@@ -188,17 +188,17 @@ const pillarAngleLibrary: Record<LinkedInPillar, string[]> = {
     "where compliance reviews break down under deadline pressure",
   ],
   product_demonstrations: [
-    "how BidPilot AI extracts requirements from large tender packs",
+    "how PursuitIQ extracts requirements from large tender packs",
     "how compliance scoring surfaces blockers before submission day",
     "how grounded drafting accelerates proposal reviews",
   ],
 };
 
 const callToActions: Record<LinkedInPillar, string> = {
-  tender_tips: "Book a BidPilot AI workflow demo to cut drafting time before your next deadline.",
+  tender_tips: "Book a PursuitIQ workflow demo to cut drafting time before your next deadline.",
   procurement_updates: "Start a trial to turn procurement updates into a reusable bid playbook.",
-  winning_bid_examples: "See how BidPilot AI turns proven answers into a searchable response library.",
-  compliance_guidance: "Run a submission-readiness review with BidPilot AI before final sign-off.",
+  winning_bid_examples: "See how PursuitIQ turns proven answers into a searchable response library.",
+  compliance_guidance: "Run a submission-readiness review with PursuitIQ before final sign-off.",
   product_demonstrations: "Start a free trial and see the platform draft, check, and organize your next bid.",
 };
 
@@ -555,7 +555,7 @@ export async function generateLinkedInPost(post: z.infer<typeof GrowthGenerateSc
     "#BidManagement",
     "#Tendering",
     `#${regionLabels[post.region].replace(/\s+/g, "")}`,
-    "#BidPilotAI",
+    "#PursuitIQ",
   ];
 
   if (!hasOpenAIEnv()) {
@@ -580,7 +580,7 @@ export async function generateLinkedInPost(post: z.infer<typeof GrowthGenerateSc
         role: "user",
         content: JSON.stringify({
           post,
-          objective: "maximize paid conversions from LinkedIn content for BidPilot AI",
+          objective: "maximize paid conversions from LinkedIn content for PursuitIQ",
           metricsToOptimize: ["paidConversions", "trials", "signups"],
         }),
       },

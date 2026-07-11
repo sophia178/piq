@@ -7,7 +7,7 @@ export default function LoginPage() {
       <Logo />
       <AuthForm
         mode="login"
-        title="Login to BidPilot AI"
+        title="Login to PursuitIQ"
         description="Access your organisation workspace, response library, compliance engine, and billing controls."
       />
     </main>

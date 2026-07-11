@@ -8,7 +8,7 @@ export default function SignupPage() {
       <AuthForm
         mode="signup"
         title="Create your organisation"
-        description="Provision a secure BidPilot AI workspace with multi-user collaboration, tenant isolation, audit logging, and billing-ready subscriptions."
+        description="Provision a secure PursuitIQ workspace with multi-user collaboration, tenant isolation, audit logging, and billing-ready subscriptions."
       />
     </main>
   );

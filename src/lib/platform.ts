@@ -200,7 +200,7 @@ export const demoResponses: GeneratedResponse[] = [
   {
     section: "Social Value Response",
     content:
-      "BidPilot recommends enriching this answer with location-specific apprenticeships, local SME spend, and carbon reporting baselines before final submission.",
+      "PursuitIQ recommends enriching this answer with location-specific apprenticeships, local SME spend, and carbon reporting baselines before final submission.",
     sourceReferences: ["ESG Impact Report 2025"],
     supportingEvidence: ["Existing ESG report provides broad impact data but lacks local targets."],
     confidence: 73,
