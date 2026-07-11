@@ -273,6 +273,37 @@ export async function getActiveOrganizationContext(): Promise<OrganizationProfil
   };
 }
 
+export async function getUserSubscriptionStatus() {
+  const supabase = await createServerSupabaseClient();
+  if (!supabase) return null;
+
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData?.user) return null;
+
+  const { data: membership } = await supabase
+    .from("organization_members")
+    .select("organization_id")
+    .eq("user_id", userData.user.id)
+    .limit(1)
+    .maybeSingle();
+
+  if (!membership?.organization_id) return null;
+
+  const { data: subscription } = await supabase
+    .from("subscriptions")
+    .select("status, stripe_price_id, current_period_end")
+    .eq("organization_id", membership.organization_id)
+    .maybeSingle();
+
+  return {
+    organizationId: membership.organization_id as string,
+    status: (subscription?.status as string | null) ?? null,
+    stripePriceId: (subscription?.stripe_price_id as string | null) ?? null,
+    currentPeriodEnd: (subscription?.current_period_end as string | null) ?? null,
+    isActive: subscription?.status === "active" || subscription?.status === "trialing",
+  };
+}
+
 export function createServiceSupabaseClient() {
   if (!hasSupabaseEnv() || !env.supabaseServiceRoleKey) return null;
 
