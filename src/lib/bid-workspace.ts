@@ -1338,71 +1338,135 @@ export async function getBidWorkspaceSnapshot(projectId: string, organizationId?
     };
   }
 
-  const [projectResponse, pipelineResponse, requirementResponse, bidRequirementResponse, complianceResponse, sectionResponse, responseLibraryResponse, workspaceDocResponse, taskResponse, timelineResponse, knowledgeCoverage] =
-    await Promise.all([
-      supabase
-        .from("projects")
-        .select("id, organization_id, title, tender_name, issuing_body, submission_deadline, estimated_contract_value, status, readiness_score")
-        .eq("organization_id", organizationId)
-        .eq("id", projectId)
-        .single(),
-      supabase
-        .from("opportunity_pipeline")
-        .select("opportunity_id")
-        .eq("organization_id", organizationId)
-        .eq("project_id", projectId)
-        .maybeSingle(),
-      supabase
-        .from("requirements")
-        .select("id, heading, requirement, mandatory, owner_name, response_status")
-        .eq("organization_id", organizationId)
-        .eq("project_id", projectId)
-        .order("created_at", { ascending: true }),
-      supabase
-        .from("bid_requirements")
-        .select("id, requirement_id, heading, requirement, category, mandatory, checklist_status, missing_information_type, evidence_guidance, source_excerpt, sort_order")
-        .eq("organization_id", organizationId)
-        .eq("project_id", projectId)
-        .order("sort_order", { ascending: true }),
-      supabase
-        .from("compliance_checks")
-        .select("readiness_score, completion_score, readiness_state, missing_information, missing_documents, missing_certifications, missing_evidence, missing_references, risk_warnings, checklist")
-        .eq("organization_id", organizationId)
-        .eq("project_id", projectId)
-        .maybeSingle(),
-      supabase
-        .from("bid_sections")
-        .select("id, section_key, title, status, completion_percentage, section_order, guidance, latest_draft_id, latest_workspace_document_id, last_generated_at")
-        .eq("organization_id", organizationId)
-        .eq("project_id", projectId)
-        .order("section_order", { ascending: true }),
-      supabase
-        .from("response_library")
-        .select("id, section_name, content, source_references, supporting_evidence, confidence_score")
-        .eq("organization_id", organizationId)
-        .eq("project_id", projectId),
-      supabase
-        .from("workspace_documents")
-        .select("id, title, document_type, content")
-        .eq("organization_id", organizationId)
-        .eq("project_id", projectId),
-      supabase
-        .from("bid_tasks")
-        .select("id, title, description, owner_name, task_type, status, priority, due_at")
-        .eq("organization_id", organizationId)
-        .eq("project_id", projectId)
-        .order("due_at", { ascending: true }),
-      supabase
-        .from("bid_timeline")
-        .select("id, milestone_key, title, details, due_at, status, sort_order")
-        .eq("organization_id", organizationId)
-        .eq("project_id", projectId)
-        .order("sort_order", { ascending: true }),
-      loadKnowledgeCoverageForTender(projectId, organizationId),
-    ]);
+  let projectResponse: any = { data: null };
+  let pipelineResponse: any = { data: null };
+  let requirementResponse: any = { data: null };
+  let bidRequirementResponse: any = { data: null };
+  let complianceResponse: any = { data: null };
+  let sectionResponse: any = { data: null };
+  let responseLibraryResponse: any = { data: null };
+  let workspaceDocResponse: any = { data: null };
+  let taskResponse: any = { data: null };
+  let timelineResponse: any = { data: null };
+  let knowledgeCoverage: any = [];
+
+  try {
+    projectResponse = await supabase
+      .from("projects")
+      .select("id, organization_id, title, tender_name, issuing_body, submission_deadline, estimated_contract_value, status, readiness_score")
+      .eq("organization_id", organizationId)
+      .eq("id", projectId)
+      .single();
+  } catch (error) {
+    console.error('Failed to load project:', error);
+  }
 
   if (!projectResponse.data) {
     return getBidWorkspaceSnapshot(projectId);
+  }
+
+  try {
+    pipelineResponse = await supabase
+      .from("opportunity_pipeline")
+      .select("opportunity_id")
+      .eq("organization_id", organizationId)
+      .eq("project_id", projectId)
+      .maybeSingle();
+  } catch (error) {
+    console.error('Failed to load opportunity pipeline:', error);
+  }
+
+  try {
+    requirementResponse = await supabase
+      .from("requirements")
+      .select("id, heading, requirement, mandatory, owner_name, response_status")
+      .eq("organization_id", organizationId)
+      .eq("project_id", projectId)
+      .order("created_at", { ascending: true });
+  } catch (error) {
+    console.error('Failed to load requirements:', error);
+  }
+
+  try {
+    bidRequirementResponse = await supabase
+      .from("bid_requirements")
+      .select("id, requirement_id, heading, requirement, category, mandatory, checklist_status, missing_information_type, evidence_guidance, source_excerpt, sort_order")
+      .eq("organization_id", organizationId)
+      .eq("project_id", projectId)
+      .order("sort_order", { ascending: true });
+  } catch (error) {
+    console.error('Failed to load bid requirements:', error);
+  }
+
+  try {
+    complianceResponse = await supabase
+      .from("compliance_checks")
+      .select("readiness_score, completion_score, readiness_state, missing_information, missing_documents, missing_certifications, missing_evidence, missing_references, risk_warnings, checklist")
+      .eq("organization_id", organizationId)
+      .eq("project_id", projectId)
+      .maybeSingle();
+  } catch (error) {
+    console.error('Failed to load compliance checks:', error);
+  }
+
+  try {
+    sectionResponse = await supabase
+      .from("bid_sections")
+      .select("id, section_key, title, status, completion_percentage, section_order, guidance, latest_draft_id, latest_workspace_document_id, last_generated_at")
+      .eq("organization_id", organizationId)
+      .eq("project_id", projectId)
+      .order("section_order", { ascending: true });
+  } catch (error) {
+    console.error('Failed to load bid sections:', error);
+  }
+
+  try {
+    responseLibraryResponse = await supabase
+      .from("response_library")
+      .select("id, section_name, content, source_references, supporting_evidence, confidence_score")
+      .eq("organization_id", organizationId)
+      .eq("project_id", projectId);
+  } catch (error) {
+    console.error('Failed to load response library:', error);
+  }
+
+  try {
+    workspaceDocResponse = await supabase
+      .from("workspace_documents")
+      .select("id, title, document_type, content")
+      .eq("organization_id", organizationId)
+      .eq("project_id", projectId);
+  } catch (error) {
+    console.error('Failed to load workspace documents:', error);
+  }
+
+  try {
+    taskResponse = await supabase
+      .from("bid_tasks")
+      .select("id, title, description, owner_name, task_type, status, priority, due_at")
+      .eq("organization_id", organizationId)
+      .eq("project_id", projectId)
+      .order("due_at", { ascending: true });
+  } catch (error) {
+    console.error('Failed to load bid tasks:', error);
+  }
+
+  try {
+    timelineResponse = await supabase
+      .from("bid_timeline")
+      .select("id, milestone_key, title, details, due_at, status, sort_order")
+      .eq("organization_id", organizationId)
+      .eq("project_id", projectId)
+      .order("sort_order", { ascending: true });
+  } catch (error) {
+    console.error('Failed to load bid timeline:', error);
+  }
+
+  try {
+    knowledgeCoverage = await loadKnowledgeCoverageForTender(projectId, organizationId);
+  } catch (error) {
+    console.error('Failed to load knowledge coverage:', error);
+    knowledgeCoverage = [];
   }
 
   const project = normalizeProjectSummary(projectResponse.data);
