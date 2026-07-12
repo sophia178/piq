@@ -1372,23 +1372,34 @@ export async function getSubmissionExportDashboardSnapshot(organizationId?: stri
         tender_name: item.tenderName,
       }));
 
-  const projectSummaries = await Promise.all(
-    (projects as any[]).map(async (project) => {
-      const snapshot = await getSubmissionExportWorkspaceSnapshot(project.id as string, activeOrganizationId);
-      return snapshot.projectSummary;
-    }),
-  );
+  let projectSummaries: any[] = [];
+  try {
+    projectSummaries = await Promise.all(
+      (projects as any[]).map(async (project) => {
+        const snapshot = await getSubmissionExportWorkspaceSnapshot(project.id as string, activeOrganizationId);
+        return snapshot.projectSummary;
+      }),
+    );
+  } catch (error) {
+    console.error('Failed to load project summaries:', error);
+    projectSummaries = [];
+  }
 
-  const recentExports = supabase && activeOrganizationId
-    ? (
-        await supabase
-          .from("export_history")
-          .select("id, project_id, template_id, export_type, generated_at, generated_by, file_name, content_type, final_submission_recommendation, export_risk_score")
-          .eq("organization_id", activeOrganizationId)
-          .order("generated_at", { ascending: false })
-          .limit(10)
-      ).data?.map((row: any) => mapExportHistoryRow(row)) ?? []
-    : [];
+  let recentExports: ExportHistoryRecord[] = [];
+  try {
+    if (supabase && activeOrganizationId) {
+      const result = await supabase
+        .from("export_history")
+        .select("id, project_id, template_id, export_type, generated_at, generated_by, file_name, content_type, final_submission_recommendation, export_risk_score")
+        .eq("organization_id", activeOrganizationId)
+        .order("generated_at", { ascending: false })
+        .limit(10);
+      recentExports = result.data?.map((row: any) => mapExportHistoryRow(row)) ?? [];
+    }
+  } catch (error) {
+    console.error('Failed to load export history:', error);
+    recentExports = [];
+  }
 
   return {
     organization,

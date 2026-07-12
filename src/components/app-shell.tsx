@@ -96,15 +96,22 @@ export function AppShell({
 
 async function NavigationLinks({ title, workspaceHref }: { title: string; workspaceHref?: LinkHref }) {
   let workspaceLink = workspaceHref ?? "/dashboard";
-  
+
   if (!workspaceHref) {
     try {
-      const recentProject = await getRecentProject();
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Timeout')), 5000)
+      );
+      const recentProject = await Promise.race([
+        getRecentProject(),
+        timeoutPromise
+      ]) as Awaited<ReturnType<typeof getRecentProject>>;
       if (recentProject) {
         workspaceLink = `/projects/${recentProject.id}/workspace` as Route;
       }
     } catch (error) {
       console.error('Failed to get recent project:', error);
+      workspaceLink = "/dashboard";
     }
   }
 
