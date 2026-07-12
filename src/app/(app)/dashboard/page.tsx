@@ -24,33 +24,32 @@ export default async function DashboardPage() {
     redirect("/login");
   }
   
-  // TODO: Re-enable subscription check after debugging
-  // let supabaseClient = createServiceSupabaseClient();
-  // if (!supabaseClient) {
-  //   supabaseClient = serverSupabase;
-  // }
-  // 
-  // const { data: membership } = await supabaseClient
-  //   .from("organization_members")
-  //   .select("organization_id")
-  //   .eq("user_id", userData.user.id)
-  //   .limit(1)
-  //   .maybeSingle();
-  // 
-  // if (!membership?.organization_id) {
-  //   redirect("/billing");
-  // }
-  // 
-  // const { data: subscription } = await supabaseClient
-  //   .from("subscriptions")
-  //   .select("status")
-  //   .eq("organization_id", membership.organization_id)
-  //   .maybeSingle();
-  // 
-  // const hasActiveSubscription = subscription?.status === "active" || subscription?.status === "trialing";
-  // if (!hasActiveSubscription) {
-  //   redirect("/billing");
-  // }
+  let supabaseClient = createServiceSupabaseClient();
+  if (!supabaseClient) {
+    supabaseClient = serverSupabase;
+  }
+  
+  const { data: membership } = await supabaseClient
+    .from("organization_members")
+    .select("organization_id")
+    .eq("user_id", userData.user.id)
+    .limit(1)
+    .maybeSingle();
+  
+  if (!membership?.organization_id) {
+    redirect("/billing");
+  }
+  
+  const { data: subscription } = await supabaseClient
+    .from("subscriptions")
+    .select("status")
+    .eq("organization_id", membership.organization_id)
+    .maybeSingle();
+  
+  const hasActiveSubscription = subscription?.status === "active" || subscription?.status === "trialing";
+  if (!hasActiveSubscription) {
+    redirect("/billing");
+  }
   
   const organizationId = organization.id === "org_demo" ? undefined : organization.id;
   const snapshot = getDashboardSnapshot();
