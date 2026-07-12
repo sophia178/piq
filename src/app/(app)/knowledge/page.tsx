@@ -7,7 +7,24 @@ import { getActiveOrganizationContext } from "@/lib/platform";
 
 export default async function KnowledgePage() {
   const organization = await getActiveOrganizationContext();
-  const snapshot = await getKnowledgeEngineSnapshot(organization.id === "org_demo" ? undefined : organization.id);
+  const organizationId = organization.id === "org_demo" ? undefined : organization.id;
+  
+  let snapshot: any = {
+    coverageScore: 0,
+    totalDocuments: 0,
+    totalChunks: 0,
+    mostValuableDocuments: [],
+    missingKnowledgeAreas: [],
+  };
+  
+  try {
+    snapshot = await Promise.race([
+      getKnowledgeEngineSnapshot(organizationId),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 10000))
+    ]);
+  } catch (error) {
+    console.error('Failed to load knowledge snapshot:', error);
+  }
 
   return (
     <AppShell title="Knowledge" eyebrow="RAG" organization={organization}>
@@ -35,7 +52,7 @@ export default async function KnowledgePage() {
       </section>
 
       <section className="mt-8">
-        <KnowledgeEngineBoard snapshot={snapshot} organizationId={organization.id === "org_demo" ? undefined : organization.id} />
+        <KnowledgeEngineBoard snapshot={snapshot} organizationId={organizationId} />
       </section>
     </AppShell>
   );

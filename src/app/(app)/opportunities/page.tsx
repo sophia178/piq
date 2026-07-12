@@ -9,7 +9,38 @@ import { formatCurrency } from "@/lib/utils";
 export default async function OpportunitiesPage() {
   const organization = await getActiveOrganizationContext();
   const organizationId = organization.id === "org_demo" ? undefined : organization.id;
-  const snapshot = await getOpportunityDiscoverySnapshot(organizationId);
+  
+  let snapshot: any = {
+    organizationReport: {
+      opportunitiesFound: 0,
+      opportunitiesPursued: 0,
+      bidsSubmitted: 0,
+      contractsWon: 0,
+      totalContractValueWon: 0,
+    },
+    metrics: {
+      newOpportunities: 0,
+      savedOpportunities: 0,
+      highMatchOpportunities: 0,
+      scansLast7Days: 0,
+    },
+    funnel: {
+      opportunity: 0,
+      imported: 0,
+      bidCreated: 0,
+      submitted: 0,
+      won: 0,
+    },
+  };
+  
+  try {
+    snapshot = await Promise.race([
+      getOpportunityDiscoverySnapshot(organizationId),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 10000))
+    ]);
+  } catch (error) {
+    console.error('Failed to load opportunities snapshot:', error);
+  }
 
   return (
     <AppShell title="Opportunities" eyebrow="Discovery" organization={organization}>

@@ -8,7 +8,17 @@ import { getPredictEngineSnapshot } from "@/lib/predict";
 export default async function PredictPage() {
   const organization = await getActiveOrganizationContext();
   const organizationId = organization.id === "org_demo" ? undefined : organization.id;
-  const snapshot = await getPredictEngineSnapshot(organizationId);
+  
+  let snapshot: any = { predictions: [], metrics: {} };
+  
+  try {
+    snapshot = await Promise.race([
+      getPredictEngineSnapshot(organizationId),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 10000))
+    ]);
+  } catch (error) {
+    console.error('Failed to load predict snapshot:', error);
+  }
 
   return (
     <AppShell title="Predict" eyebrow="Win Intelligence" organization={organization}>
