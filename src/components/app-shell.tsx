@@ -1,10 +1,10 @@
 import Link from "next/link";
 import type { Route } from "next";
 import type { ComponentProps, ReactNode } from "react";
-import { BarChart3, BookOpen, BrainCircuit, CreditCard, FileOutput, FileSearch, FolderKanban, LibraryBig, LayoutDashboard, Megaphone, Search, ShieldCheck, Trophy } from "lucide-react";
+import { BarChart3, BookOpen, BrainCircuit, CreditCard, FileOutput, FileSearch, FolderKanban, LibraryBig, LayoutDashboard, LogOut, Megaphone, Search, ShieldCheck, Trophy } from "lucide-react";
 import { demoOrganization, type OrganizationProfile, getRecentProject } from "@/lib/platform";
 import { cn } from "@/lib/utils";
-import { Badge, Logo } from "@/components/ui";
+import { Badge, Logo, Button } from "@/components/ui";
 
 type LinkHref = ComponentProps<typeof Link>["href"];
 
@@ -25,7 +25,7 @@ export function AppShell({
 
   const getNavigation = async () => {
     let workspaceLink = workspaceHref ?? "/dashboard";
-    
+
     if (!workspaceHref) {
       try {
         const recentProject = await getRecentProject();
@@ -55,30 +55,51 @@ export function AppShell({
 
   return (
     <div className="app-shell-grid min-h-screen">
-      <aside className="border-r border-white/10 bg-slate-950/70 p-6">
-        <Logo />
-        <div className="mt-8 rounded-3xl border border-white/10 bg-white/5 p-4">
-          <p className="text-xs uppercase tracking-[0.24em] text-slate-500">Organisation</p>
-          <p className="mt-3 text-sm font-semibold text-white">{activeOrganization.companyName}</p>
-          <p className="mt-1 text-xs text-slate-400">{activeOrganization.industry}</p>
-          <div className="mt-4 flex flex-wrap gap-2">
-            {activeOrganization.certifications.map((item) => (
-              <Badge key={item}>{item}</Badge>
-            ))}
+      <aside className="border-r border-white/10 bg-slate-950/70 p-6 flex flex-col">
+        <div className="flex-1">
+          <Logo />
+          <div className="mt-8 rounded-3xl border border-white/10 bg-white/5 p-4">
+            <p className="text-xs uppercase tracking-[0.24em] text-slate-500">Organisation</p>
+            <p className="mt-3 text-sm font-semibold text-white">{activeOrganization.companyName}</p>
+            <p className="mt-1 text-xs text-slate-400">{activeOrganization.industry}</p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {activeOrganization.certifications.map((item) => (
+                <Badge key={item}>{item}</Badge>
+              ))}
+            </div>
           </div>
-        </div>
-        <nav className="mt-8 space-y-1">
-          <NavigationLinks title={title} workspaceHref={workspaceHref} />
-        </nav>
-        <div className="mt-8 rounded-3xl border border-teal-300/10 bg-teal-400/5 p-4">
-          <div className="flex items-center gap-3">
-            <ShieldCheck className="h-5 w-5 text-teal-300" />
-            <div>
-              <p className="text-sm font-semibold text-white">Security</p>
-              <p className="text-xs text-slate-400">RLS, audit logs, rate limiting</p>
+          <nav className="mt-8 space-y-1">
+            <NavigationLinks title={title} workspaceHref={workspaceHref} />
+          </nav>
+          <div className="mt-8 rounded-3xl border border-teal-300/10 bg-teal-400/5 p-4">
+            <div className="flex items-center gap-3">
+              <ShieldCheck className="h-5 w-5 text-teal-300" />
+              <div>
+                <p className="text-sm font-semibold text-white">Security</p>
+                <p className="text-xs text-slate-400">RLS, audit logs, rate limiting</p>
+              </div>
             </div>
           </div>
         </div>
+        <form
+          action={async () => {
+            "use server";
+            const { redirect } = await import("next/navigation");
+            await fetch(`${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/api/auth/logout`, {
+              method: "POST",
+            });
+            redirect("/login");
+          }}
+          className="mt-8 pt-4 border-t border-white/10"
+        >
+          <button
+            type="submit"
+            className="w-full flex items-center gap-3 rounded-2xl px-4 py-3 text-sm text-slate-300 transition hover:bg-white/5 hover:text-white"
+          >
+            <LogOut className="h-4 w-4" />
+            <span>Logout</span>
+          </button>
+        </form>
       </aside>
       <main className="px-6 py-6 lg:px-10">
         <header className="mb-8 flex flex-col gap-3 border-b border-white/10 pb-6 lg:flex-row lg:items-end lg:justify-between">

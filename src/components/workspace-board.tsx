@@ -104,12 +104,23 @@ export function WorkspaceBoard({
   );
 
   async function runAction(input: { url: string; method: "POST" | "PATCH"; body: Record<string, unknown> }) {
-    await fetch(input.url, {
-      method: input.method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(input.body),
-    });
-    router.refresh();
+    try {
+      const response = await fetch(input.url, {
+        method: input.method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(input.body),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data?.error ?? `Request failed with status ${response.status}`);
+      }
+
+      router.refresh();
+    } catch (error) {
+      console.error('Operation failed:', error);
+      throw error;
+    }
   }
 
   function handleRegenerate(sectionKey: BidSectionKey) {
