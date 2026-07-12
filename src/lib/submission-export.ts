@@ -28,7 +28,6 @@ import {
 } from "@/lib/knowledge";
 import {
   createServiceSupabaseClient,
-  demoOrganization,
   demoProjects,
   getActiveOrganizationContext,
   trackAuditEvent,
@@ -1350,92 +1349,46 @@ export async function getSubmissionExportWorkspaceSnapshot(
 }
 
 export async function getSubmissionExportDashboardSnapshot(organizationId?: string): Promise<SubmissionExportDashboardSnapshot> {
-  let organization: OrganizationProfile = demoOrganization;
-  let branding: OrganizationBrandingSettings = { companyName: "Demo", primaryColor: "#000", secondaryColor: "#000", headerText: "", footerText: "", contactInformation: "" };
-  let templates: ExportTemplateRecord[] = [];
-  let projects: any[] = [];
-  let projectSummaries: any[] = [];
-  let recentExports: ExportHistoryRecord[] = [];
-
-  try {
-    organization = await getActiveOrganizationContext();
-  } catch (error) {
-    console.error('Failed to get organization context:', error);
-  }
-
+  const organization = await getActiveOrganizationContext();
   const activeOrganizationId = organizationId ?? (organization.id === "org_demo" ? undefined : organization.id);
-
-  try {
-    branding = await getOrganizationBrandingSettings(activeOrganizationId, organization);
-  } catch (error) {
-    console.error('Failed to get branding settings:', error);
-  }
-
-  try {
-    templates = await getExportTemplates(activeOrganizationId);
-  } catch (error) {
-    console.error('Failed to get export templates:', error);
-    templates = [];
-  }
-
+  const branding = await getOrganizationBrandingSettings(activeOrganizationId, organization);
+  const templates = await getExportTemplates(activeOrganizationId);
   const supabase = createServiceSupabaseClient();
 
-  try {
-    const result = supabase && activeOrganizationId
-      ? await supabase
+  const projects = supabase && activeOrganizationId
+    ? (
+        await supabase
           .from("projects")
           .select("id, title, issuing_body, estimated_contract_value, tender_name")
           .eq("organization_id", activeOrganizationId)
           .order("updated_at", { ascending: false })
           .limit(8)
-      : null;
-    projects = result?.data ?? [];
-  } catch (error) {
-    console.error('Failed to load projects:', error);
-    projects = [];
-  }
+      ).data ?? []
+    : demoProjects.map((item) => ({
+        id: item.id,
+        title: item.title,
+        issuing_body: item.issuingBody,
+        estimated_contract_value: item.estimatedContractValue,
+        tender_name: item.tenderName,
+      }));
 
-  if (projects.length === 0) {
-    projects = demoProjects.map((item) => ({
-      id: item.id,
-      title: item.title,
-      issuing_body: item.issuingBody,
-      estimated_contract_value: item.estimatedContractValue,
-      tender_name: item.tenderName,
-    }));
-  }
+  const projectSummaries = await Promise.all(
+    (projects as any[]).map(async (project) => {
+      const snapshot = await getSubmissionExportWorkspaceSnapshot(project.id as string, activeOrganizationId);
+      return snapshot.projectSummary;
+    }),
+  );
 
-  try {
-    projectSummaries = await Promise.all(
-      (projects as any[]).map(async (project) => {
-        try {
-          const snapshot = await getSubmissionExportWorkspaceSnapshot(project.id as string, activeOrganizationId);
-          return snapshot.projectSummary;
-        } catch (error) {
-          console.error(`Failed to get workspace snapshot for project ${project.id}:`, error);
-          return { projectId: project.id, title: project.title, finalSubmissionRecommendation: "Not Ready", exportRiskScore: 0 };
-        }
-      }),
-    );
-  } catch (error) {
-    console.error('Failed to load project summaries:', error);
-    projectSummaries = [];
-  }
-
-  try {
-    if (supabase && activeOrganizationId) {
-      const result = await supabase
-        .from("export_history")
-        .select("id, project_id, template_id, export_type, generated_at, generated_by, file_name, content_type, final_submission_recommendation, export_risk_score")
-        .eq("organization_id", activeOrganizationId)
-        .order("generated_at", { ascending: false })
-        .limit(10);
-      recentExports = result.data?.map((row: any) => mapExportHistoryRow(row)) ?? [];
-    }
-  } catch (error) {
-    console.error('Failed to load export history:', error);
-    recentExports = [];
-  }
+  const recentExports = supabase && activeOrganizationId
+    ? (
+        await supabase
+          .from("export_history")
+          .select("id, project_id, template_id, export_type, generated_at, generated_by, file_name, content_type, final_submission_recommendation, export_risk_score")
+          .eq("organization_id", activeOrganizationId)
+          .order("generated_at", { ascending: false })
+          .limit(10)
+      ).data?.map((row: any) => mapExportHistoryRow(row)) ?? []
+    : [];
 
   return {
     organization,
