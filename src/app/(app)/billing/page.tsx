@@ -5,7 +5,16 @@ import { getActiveOrganizationContext, getUserSubscriptionStatus, planCatalog } 
 
 export default async function BillingPage() {
   const organization = await getActiveOrganizationContext();
-  const subscription = await getUserSubscriptionStatus();
+  
+  let subscription: any = null;
+  try {
+    subscription = await Promise.race([
+      getUserSubscriptionStatus(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 10000))
+    ]);
+  } catch (error) {
+    console.error('Failed to load subscription status:', error);
+  }
 
   return (
     <AppShell title="Billing" eyebrow="Revenue" organization={organization}>
