@@ -3,6 +3,7 @@ import { AppShell } from "@/components/app-shell";
 import { Card } from "@/components/ui";
 import { SubmissionExportBoard } from "@/components/submission-export-board";
 import { getSubmissionExportDashboardSnapshot, getSubmissionExportWorkspaceSnapshot } from "@/lib/submission-export";
+import { getAuthenticatedAppContext } from "@/lib/platform";
 
 const createTimeout = (ms: number) => new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), ms));
 
@@ -11,7 +12,8 @@ export default async function ExportsPage({
 }: {
   searchParams?: Promise<{ projectId?: string; templateId?: string }>;
 }) {
-  let dashboard: any = { organization: { id: "org_demo" }, projects: [] };
+  const { organization, organizationId } = await getAuthenticatedAppContext();
+  let dashboard: any = { organization, projects: [] };
   let workspace: any = { projects: [] };
 
   try {
@@ -19,7 +21,7 @@ export default async function ExportsPage({
     
     try {
       dashboard = await Promise.race([
-        getSubmissionExportDashboardSnapshot(),
+        getSubmissionExportDashboardSnapshot(organizationId),
         createTimeout(10000)
       ]);
     } catch (error) {
@@ -32,7 +34,7 @@ export default async function ExportsPage({
       workspace = await Promise.race([
         getSubmissionExportWorkspaceSnapshot(
           selectedProjectId,
-          dashboard.organization.id === "org_demo" ? undefined : dashboard.organization.id,
+          organizationId,
           params.templateId,
         ),
         createTimeout(10000)

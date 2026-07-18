@@ -43,13 +43,14 @@ export async function POST(request: NextRequest) {
       .eq("organization_id", organizationId)
       .maybeSingle();
 
-    if (!subscription?.stripe_customer_id) {
-      return NextResponse.json({ error: "No active Stripe customer found for this organization." }, { status: 400 });
+    const customerId = subscription?.stripe_customer_id as string | undefined;
+    if (!customerId || !customerId.startsWith("cus_") || customerId.includes("test_manual")) {
+      return NextResponse.json({ error: "No valid Stripe customer found for this organization. Please complete your subscription first." }, { status: 400 });
     }
 
     const stripe = new Stripe(env.stripeSecretKey!);
     const session = await stripe.billingPortal.sessions.create({
-      customer: subscription.stripe_customer_id as string,
+      customer: customerId,
       return_url: `${env.appUrl}/billing`,
     });
 

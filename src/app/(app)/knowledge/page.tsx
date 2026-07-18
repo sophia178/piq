@@ -3,11 +3,10 @@ import { AppShell } from "@/components/app-shell";
 import { KnowledgeEngineBoard } from "@/components/knowledge-engine-board";
 import { Card } from "@/components/ui";
 import { getKnowledgeEngineSnapshot } from "@/lib/knowledge";
-import { getActiveOrganizationContext } from "@/lib/platform";
+import { getAuthenticatedAppContext } from "@/lib/platform";
 
 export default async function KnowledgePage() {
-  const organization = await getActiveOrganizationContext();
-  const organizationId = organization.id === "org_demo" ? undefined : organization.id;
+  const { organization, organizationId } = await getAuthenticatedAppContext();
   
   let snapshot: any = {
     coverageScore: 0,

@@ -3,7 +3,7 @@ import type { Route } from "next";
 import { AppShell } from "@/components/app-shell";
 import { Badge, Button, Card } from "@/components/ui";
 import { getBidReviewDashboardSnapshot } from "@/lib/bid-review";
-import { getActiveOrganizationContext } from "@/lib/platform";
+import { getAuthenticatedAppContext } from "@/lib/platform";
 import { formatCurrency } from "@/lib/utils";
 
 function formatDate(value?: string | null) {
@@ -14,8 +14,7 @@ function formatDate(value?: string | null) {
 const createTimeout = (ms: number) => new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), ms));
 
 export default async function ReviewsPage() {
-  const organization = await getActiveOrganizationContext();
-  const organizationId = organization.id === "org_demo" ? undefined : organization.id;
+  const { organization, organizationId } = await getAuthenticatedAppContext();
   
   let snapshot: any = { metrics: { projectsReviewed: 0, averageOverallBidScore: 0, averageReadinessScore: 0, criticalFindings: 0, improvementOpportunities: 0 }, projects: [] };
   

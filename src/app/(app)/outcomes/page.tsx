@@ -3,12 +3,11 @@ import { AppShell } from "@/components/app-shell";
 import { BidOutcomeIntelligenceBoard } from "@/components/bid-outcome-intelligence-board";
 import { Card } from "@/components/ui";
 import { getBidOutcomeIntelligenceSnapshot } from "@/lib/opportunities";
-import { getActiveOrganizationContext } from "@/lib/platform";
+import { getAuthenticatedAppContext } from "@/lib/platform";
 import { formatCurrency, formatPercent } from "@/lib/utils";
 
 export default async function OutcomesPage() {
-  const organization = await getActiveOrganizationContext();
-  const organizationId = organization.id === "org_demo" ? undefined : organization.id;
+  const { organization, organizationId } = await getAuthenticatedAppContext();
   
   let snapshot: any = {
     metrics: { submitted: 0, shortlisted: 0, won: 0, rejected: 0, lost: 0, winRate: 0, revenueWon: 0, revenueLost: 0 },

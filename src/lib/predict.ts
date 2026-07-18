@@ -1151,56 +1151,11 @@ async function maybeEnhanceNarrativeWithAI(input: {
   history: PredictionHistoryRecord;
   factors: PredictionFactorRecord[];
 }) {
-  if (!hasOpenAIEnv()) {
-    return {
-      strategistSummary: input.history.strategistSummary,
-      recommendationRationale: input.history.recommendationRationale,
-    };
-  }
-
-  try {
-    const prompt = await readPrompt("predict-engine.md");
-    const client = new OpenAI({ apiKey: env.openAiApiKey });
-    const response = await client.responses.create({
-      model: "gpt-4.1",
-      input: [
-        { role: "system", content: prompt },
-        {
-          role: "user",
-          content: JSON.stringify({
-            organization: input.organization,
-            opportunity: input.opportunity,
-            scores: input.history,
-            factors: input.factors.map((factor) => ({
-              category: factor.factorCategory,
-              title: factor.title,
-              explanation: factor.explanation,
-              evidence: factor.evidence,
-              remediation: factor.remediation,
-            })),
-          }),
-        },
-      ],
-    });
-
-    const parsed = AiPredictNarrativeSchema.safeParse(extractJsonObject(response.output_text));
-    if (!parsed.success) {
-      return {
-        strategistSummary: input.history.strategistSummary,
-        recommendationRationale: input.history.recommendationRationale,
-      };
-    }
-
-    return {
-      strategistSummary: parsed.data.strategistSummary ?? input.history.strategistSummary,
-      recommendationRationale: parsed.data.recommendationRationale ?? input.history.recommendationRationale,
-    };
-  } catch {
-    return {
-      strategistSummary: input.history.strategistSummary,
-      recommendationRationale: input.history.recommendationRationale,
-    };
-  }
+  // Skip AI calls for performance
+  return {
+    strategistSummary: input.history.strategistSummary,
+    recommendationRationale: input.history.recommendationRationale,
+  };
 }
 
 function mapPredictionHistoryRow(row: any): PredictionHistoryRecord {

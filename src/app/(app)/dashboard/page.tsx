@@ -1,57 +1,17 @@
 export const dynamic = 'force-dynamic';
 import type { Route } from "next";
-import { redirect } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { Badge, Button, Card } from "@/components/ui";
 import { getBidReviewDashboardSnapshot } from "@/lib/bid-review";
 import { getKnowledgeEngineSnapshot } from "@/lib/knowledge";
 import { getBidOutcomeIntelligenceSnapshot, getOpportunityDiscoverySnapshot } from "@/lib/opportunities";
-import { getActiveOrganizationContext, getDashboardSnapshot, createServerSupabaseClient, createServiceSupabaseClient } from "@/lib/platform";
+import { getAuthenticatedAppContext, getDashboardSnapshot } from "@/lib/platform";
 import { getPredictEngineSnapshot } from "@/lib/predict";
 import { getSubmissionExportDashboardSnapshot } from "@/lib/submission-export";
 import { formatCurrency, formatPercent } from "@/lib/utils";
 
 export default async function DashboardPage() {
-  const organization = await getActiveOrganizationContext();
-  
-  const serverSupabase = await createServerSupabaseClient();
-  if (!serverSupabase) {
-    redirect("/login");
-  }
-  
-  const { data: userData, error: userError } = await serverSupabase.auth.getUser();
-  if (userError || !userData?.user) {
-    redirect("/login");
-  }
-  
-  let supabaseClient = createServiceSupabaseClient();
-  if (!supabaseClient) {
-    supabaseClient = serverSupabase;
-  }
-  
-  const { data: membership } = await supabaseClient
-    .from("organization_members")
-    .select("organization_id")
-    .eq("user_id", userData.user.id)
-    .limit(1)
-    .maybeSingle();
-  
-  if (!membership?.organization_id) {
-    redirect("/billing");
-  }
-  
-  const { data: subscription } = await supabaseClient
-    .from("subscriptions")
-    .select("status")
-    .eq("organization_id", membership.organization_id)
-    .maybeSingle();
-  
-  const hasActiveSubscription = subscription?.status === "active" || subscription?.status === "trialing";
-  if (!hasActiveSubscription) {
-    redirect("/billing");
-  }
-  
-  const organizationId = organization.id === "org_demo" ? undefined : organization.id;
+  const { organization, organizationId } = await getAuthenticatedAppContext();
   const snapshot = getDashboardSnapshot();
   const opportunitySnapshot = await getOpportunityDiscoverySnapshot(organizationId);
   const outcomeSnapshot = await getBidOutcomeIntelligenceSnapshot(organizationId);

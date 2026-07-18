@@ -3,12 +3,11 @@ import { OpportunityDiscoveryBoard } from "@/components/opportunity-discovery-bo
 import { AppShell } from "@/components/app-shell";
 import { Card } from "@/components/ui";
 import { getOpportunityDiscoverySnapshot } from "@/lib/opportunities";
-import { getActiveOrganizationContext } from "@/lib/platform";
+import { getAuthenticatedAppContext } from "@/lib/platform";
 import { formatCurrency } from "@/lib/utils";
 
 export default async function OpportunitiesPage() {
-  const organization = await getActiveOrganizationContext();
-  const organizationId = organization.id === "org_demo" ? undefined : organization.id;
+  const { organization, organizationId } = await getAuthenticatedAppContext();
   
   let snapshot: any = {
     organizationReport: {

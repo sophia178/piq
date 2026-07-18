@@ -2,12 +2,11 @@ export const dynamic = 'force-dynamic';
 import { AppShell } from "@/components/app-shell";
 import { PredictBoard } from "@/components/predict-board";
 import { Card } from "@/components/ui";
-import { getActiveOrganizationContext } from "@/lib/platform";
+import { getAuthenticatedAppContext } from "@/lib/platform";
 import { getPredictEngineSnapshot } from "@/lib/predict";
 
 export default async function PredictPage() {
-  const organization = await getActiveOrganizationContext();
-  const organizationId = organization.id === "org_demo" ? undefined : organization.id;
+  const { organization, organizationId } = await getAuthenticatedAppContext();
   
   let snapshot: any = { predictions: [], metrics: {} };
   

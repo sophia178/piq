@@ -1,10 +1,10 @@
 export const dynamic = 'force-dynamic';
 import { AppShell } from "@/components/app-shell";
 import { Badge, Button, Card } from "@/components/ui";
-import { getActiveOrganizationContext, getUserSubscriptionStatus, planCatalog } from "@/lib/platform";
+import { getAuthenticatedAppContext, getUserSubscriptionStatus, planCatalog } from "@/lib/platform";
 
 export default async function BillingPage() {
-  const organization = await getActiveOrganizationContext();
+  const { organization } = await getAuthenticatedAppContext();
   
   let subscription: any = null;
   try {
