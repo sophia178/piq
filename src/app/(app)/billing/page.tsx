@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic';
 import { AppShell } from "@/components/app-shell";
+import { BillingCheckoutButton } from "@/components/billing-checkout-button";
 import { Badge, Button, Card } from "@/components/ui";
 import { getAuthenticatedAppContext, getUserSubscriptionStatus, planCatalog } from "@/lib/platform";
 
@@ -57,11 +58,13 @@ export default async function BillingPage() {
             <p className="mt-4 text-sm text-slate-300">
               {plan.monthlyTenderLimit === null ? "Unlimited tenders" : `${plan.monthlyTenderLimit} tenders per month`}
             </p>
-            <form action={`/api/stripe/checkout?tier=${plan.tier}`} method="post" className="mt-6">
-              <Button type="submit" className="w-full">
-                {subscription?.stripePriceId?.includes(plan.priceId || "") ? "Current plan" : "Select plan"}
-              </Button>
-            </form>
+            <div className="mt-6">
+              <BillingCheckoutButton
+                tier={plan.tier}
+                label={subscription?.stripePriceId?.includes(plan.priceId || "") ? "Current plan" : "Select plan"}
+                disabled={Boolean(subscription?.stripePriceId?.includes(plan.priceId || ""))}
+              />
+            </div>
           </Card>
         ))}
       </section>
