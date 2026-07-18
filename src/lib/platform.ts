@@ -275,6 +275,13 @@ export async function getActiveOrganizationContext(): Promise<OrganizationProfil
 
 export async function getAuthenticatedAppContext() {
   const organization = await getActiveOrganizationContext();
+  if (organization.id === "org_demo") {
+    return {
+      organization,
+      organizationId: undefined,
+      user: null,
+    };
+  }
   
   const serverSupabase = await createServerSupabaseClient();
   if (!serverSupabase) {
@@ -638,6 +645,7 @@ export async function createCheckoutSession(input: { tier: PlanTier; organizatio
       tier: input.tier,
     },
     subscription_data: {
+      trial_period_days: 7,
       metadata: {
         organization_id: input.organizationId,
         user_id: input.userId,

@@ -272,7 +272,7 @@ export const pricingPlans = [
     description: "For independent consultants and specialist bid advisors running high-value opportunities with discipline.",
     highlight: null,
     features: ["5 tenders per month", "All core engines", "Knowledge base up to 50 documents", "Single user seat"],
-    cta: "Start Free Trial",
+    cta: "Start 7-Day Free Trial",
   },
   {
     name: "SME",
@@ -280,7 +280,7 @@ export const pricingPlans = [
     description: "For growing bid teams that need end-to-end qualification, drafting, review, and prediction in one platform.",
     highlight: "Most Popular",
     features: ["Unlimited tenders", "Full platform access", "3 team seats included", "Priority support and guided onboarding"],
-    cta: "Get Started",
+    cta: "Start 7-Day Free Trial",
   },
   {
     name: "Agency",
@@ -288,7 +288,7 @@ export const pricingPlans = [
     description: "For agencies and bid practices managing multiple clients, frameworks, and white-label delivery models.",
     highlight: null,
     features: ["Unlimited everything", "White-label exports", "Dedicated onboarding", "API access and enterprise workflows"],
-    cta: "Get Started",
+    cta: "Start 7-Day Free Trial",
   },
   {
     name: "Enterprise",
@@ -447,4 +447,3 @@ export const showcasePrediction = {
   weaknesses: ["Limited quantified mobilisation evidence", "Social value proof needs local authority specificity"],
   riskScore: 31,
 };
-

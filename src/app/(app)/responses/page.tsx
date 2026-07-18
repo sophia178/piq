@@ -1,11 +1,12 @@
 export const dynamic = 'force-dynamic';
 import { AppShell } from "@/components/app-shell";
 import { Badge, Card } from "@/components/ui";
-import { demoResponses } from "@/lib/platform";
+import { demoResponses, getAuthenticatedAppContext } from "@/lib/platform";
 
-export default function ResponsesPage() {
+export default async function ResponsesPage() {
+  const { organization } = await getAuthenticatedAppContext();
   return (
-    <AppShell title="Response Library" eyebrow="Reuse">
+    <AppShell title="Response Library" eyebrow="Reuse" organization={organization}>
       <section className="grid gap-5">
         {demoResponses.map((response) => (
           <Card key={response.section} className="p-6">

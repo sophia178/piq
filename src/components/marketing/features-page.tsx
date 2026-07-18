@@ -22,7 +22,7 @@ export function MarketingFeaturesPage() {
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <MarketingButton href="/signup" trailingArrow>
-                  Start Free Trial
+                  Start 7-Day Free Trial
                 </MarketingButton>
                 <MarketingButton href="/pricing" variant="ghost">
                   View Pricing

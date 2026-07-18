@@ -1,6 +1,8 @@
 import { randomUUID } from "node:crypto";
 import OpenAI from "openai";
 import { z } from "zod";
+import type { BidReviewSnapshot } from "@/lib/bid-review";
+import type { BidWorkspaceSnapshot } from "@/lib/bid-workspace";
 import { env, hasOpenAIEnv } from "@/lib/env";
 import { demoOpportunities } from "@/lib/opportunities";
 import { createServiceSupabaseClient, demoOrganization, demoProjects, trackAuditEvent } from "@/lib/platform";
@@ -131,6 +133,8 @@ export const PredictOpportunitySchema = z
     opportunityId: z.string().min(2).optional(),
     projectId: z.string().min(2).optional(),
     persist: z.boolean().default(true),
+    snapshot: z.custom<BidWorkspaceSnapshot>().optional(),
+    reviewSnapshot: z.custom<BidReviewSnapshot>().optional(),
   })
   .refine((value) => Boolean(value.opportunityId || value.projectId), {
     message: "Either opportunityId or projectId is required.",
@@ -477,13 +481,18 @@ async function loadOpportunitySignals(input: {
   };
 }
 
-async function loadWorkspaceSignals(projectId?: string, organizationId?: string): Promise<WorkspaceSignals | null> {
+async function loadWorkspaceSignals(
+  projectId?: string,
+  organizationId?: string,
+  snapshot?: BidWorkspaceSnapshot,
+): Promise<WorkspaceSignals | null> {
   if (!projectId) return null;
-  const workspaceModule = await import("@/lib/bid-workspace");
-  const snapshot = await workspaceModule.getBidWorkspaceSnapshot(projectId, organizationId);
-  const methodologySection = snapshot.bidSections.find((section) => section.sectionKey === "methodology");
-  const experienceSection = snapshot.bidSections.find((section) => section.sectionKey === "experience_response");
-  const sectionCompletionAverage = Math.round(average(snapshot.bidSections.map((section) => section.completionPercentage)));
+  const resolvedSnapshot =
+    snapshot ??
+    (await (await import("@/lib/bid-workspace")).getBidWorkspaceSnapshot(projectId, organizationId));
+  const methodologySection = resolvedSnapshot.bidSections.find((section) => section.sectionKey === "methodology");
+  const experienceSection = resolvedSnapshot.bidSections.find((section) => section.sectionKey === "experience_response");
+  const sectionCompletionAverage = Math.round(average(resolvedSnapshot.bidSections.map((section) => section.completionPercentage)));
 
   const supabase = createServiceSupabaseClient();
   let usedDocumentTypes: string[] = [];
@@ -505,28 +514,33 @@ async function loadWorkspaceSignals(projectId?: string, organizationId?: string)
   }
 
   return {
-    completionScore: snapshot.compliance.completionScore,
-    readinessScore: snapshot.compliance.readinessScore,
-    missingDocuments: snapshot.compliance.missingDocuments,
-    missingCertifications: snapshot.compliance.missingCertifications,
-    missingEvidence: snapshot.compliance.missingEvidence,
-    missingReferences: snapshot.compliance.missingReferences,
+    completionScore: resolvedSnapshot.compliance.completionScore,
+    readinessScore: resolvedSnapshot.compliance.readinessScore,
+    missingDocuments: resolvedSnapshot.compliance.missingDocuments,
+    missingCertifications: resolvedSnapshot.compliance.missingCertifications,
+    missingEvidence: resolvedSnapshot.compliance.missingEvidence,
+    missingReferences: resolvedSnapshot.compliance.missingReferences,
     sectionCompletionAverage,
     methodologyCompletion: methodologySection?.completionPercentage ?? 0,
     experienceCompletion: experienceSection?.completionPercentage ?? 0,
     reviewScore: 0,
-    knowledgeCoverageScore: snapshot.knowledgeCoverage?.coverageScore ?? 0,
-    knowledgeCoverageStrength: snapshot.knowledgeCoverage?.coverageStrength ?? null,
-    knowledgeMissingAreas: snapshot.knowledgeCoverage?.missingKnowledgeAreas ?? [],
-    knowledgeRecommendations: snapshot.knowledgeCoverage?.uploadRecommendations ?? [],
+    knowledgeCoverageScore: resolvedSnapshot.knowledgeCoverage?.coverageScore ?? 0,
+    knowledgeCoverageStrength: resolvedSnapshot.knowledgeCoverage?.coverageStrength ?? null,
+    knowledgeMissingAreas: resolvedSnapshot.knowledgeCoverage?.missingKnowledgeAreas ?? [],
+    knowledgeRecommendations: resolvedSnapshot.knowledgeCoverage?.uploadRecommendations ?? [],
     usedDocumentTypes,
   };
 }
 
-async function loadReviewSignals(projectId?: string, organizationId?: string): Promise<ReviewSignals | null> {
+async function loadReviewSignals(
+  projectId?: string,
+  organizationId?: string,
+  reviewSnapshot?: BidReviewSnapshot,
+): Promise<ReviewSignals | null> {
   if (!projectId) return null;
-  const reviewModule = await import("@/lib/bid-review");
-  const snapshot = await reviewModule.getBidReviewSnapshot(projectId, organizationId);
+  const snapshot =
+    reviewSnapshot ??
+    (await (await import("@/lib/bid-review")).getBidReviewSnapshot(projectId, organizationId));
   const latest = snapshot.latestReview;
   if (!latest) return null;
 
@@ -1293,8 +1307,8 @@ async function persistPrediction(input: {
 export async function predictOpportunity(input: z.infer<typeof PredictOpportunitySchema>): Promise<ComputedPrediction> {
   const organization = await loadOrganizationSignals(input.organizationId);
   const opportunity = await loadOpportunitySignals(input);
-  const workspace = await loadWorkspaceSignals(opportunity.projectId ?? undefined, input.organizationId);
-  const review = await loadReviewSignals(opportunity.projectId ?? undefined, input.organizationId);
+  const workspace = await loadWorkspaceSignals(opportunity.projectId ?? undefined, input.organizationId, input.snapshot);
+  const review = await loadReviewSignals(opportunity.projectId ?? undefined, input.organizationId, input.reviewSnapshot);
   const historical = await loadHistoricalSignals({
     organizationId: input.organizationId,
     sector: opportunity.sector,
@@ -1444,12 +1458,19 @@ export async function syncPredictForOpportunity(input: {
   return { ok: true };
 }
 
-export async function syncPredictForProject(input: { organizationId?: string; projectId: string }) {
+export async function syncPredictForProject(input: {
+  organizationId?: string;
+  projectId: string;
+  snapshot?: BidWorkspaceSnapshot;
+  reviewSnapshot?: BidReviewSnapshot;
+}) {
   if (!input.organizationId) return { ok: true };
   await predictOpportunity({
     organizationId: input.organizationId,
     projectId: input.projectId,
     persist: true,
+    snapshot: input.snapshot,
+    reviewSnapshot: input.reviewSnapshot,
   });
   return { ok: true };
 }
@@ -1686,9 +1707,14 @@ export async function getOpportunityPredictionSummaryMap(organizationId: string 
   return map;
 }
 
-export async function getProjectPredictionSummary(projectId: string, organizationId?: string) {
+export async function getProjectPredictionSummary(
+  projectId: string,
+  organizationId?: string,
+  snapshot?: BidWorkspaceSnapshot,
+  reviewSnapshot?: BidReviewSnapshot,
+) {
   if (!organizationId) {
-    const result = await predictOpportunity({ projectId, persist: false });
+    const result = await predictOpportunity({ projectId, persist: false, snapshot, reviewSnapshot });
     return {
       latestPrediction: result.latestPrediction,
       factors: result.factors,
@@ -1697,7 +1723,7 @@ export async function getProjectPredictionSummary(projectId: string, organizatio
 
   const supabase = createServiceSupabaseClient();
   if (!supabase) {
-    const result = await predictOpportunity({ projectId, persist: false });
+    const result = await predictOpportunity({ projectId, persist: false, snapshot, reviewSnapshot });
     return {
       latestPrediction: result.latestPrediction,
       factors: result.factors,
@@ -1714,7 +1740,7 @@ export async function getProjectPredictionSummary(projectId: string, organizatio
 
   const latest = rows?.[0];
   if (!latest) {
-    const result = await predictOpportunity({ organizationId, projectId, persist: true });
+    const result = await predictOpportunity({ organizationId, projectId, persist: true, snapshot, reviewSnapshot });
     return {
       latestPrediction: result.latestPrediction,
       factors: result.factors,

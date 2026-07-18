@@ -3,13 +3,15 @@ import { GrowthEngineBoard } from "@/components/growth-engine-board";
 import { AppShell } from "@/components/app-shell";
 import { Badge, Card } from "@/components/ui";
 import { getGrowthEngineSnapshot } from "@/lib/growth";
+import { getAuthenticatedAppContext } from "@/lib/platform";
 import { formatPercent } from "@/lib/utils";
 
-export default function GrowthPage() {
+export default async function GrowthPage() {
+  const { organization } = await getAuthenticatedAppContext();
   const snapshot = getGrowthEngineSnapshot();
 
   return (
-    <AppShell title="Growth Engine" eyebrow="LinkedIn">
+    <AppShell title="Growth Engine" eyebrow="LinkedIn" organization={organization}>
       <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-5">
         <Card className="p-5">
           <p className="text-xs uppercase tracking-[0.24em] text-slate-500">Impressions</p>

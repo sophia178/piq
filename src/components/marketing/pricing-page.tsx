@@ -39,7 +39,7 @@ export function MarketingPricingPage() {
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <MarketingButton href="/signup" trailingArrow>
-                  Start Free Trial
+                  Start 7-Day Free Trial
                 </MarketingButton>
                 <MarketingButton href="/features" variant="ghost">
                   Explore Features

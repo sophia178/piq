@@ -847,7 +847,7 @@ export function MarketingHomePage() {
               <SectionReveal delay={0.16}>
                 <div className="mt-9 flex flex-wrap gap-3">
                   <MarketingButton href="/signup" trailingArrow>
-                    Start Free Trial
+                    Start 7-Day Free Trial
                   </MarketingButton>
                   <MarketingButton href="#product-tour" variant="ghost">
                     See How It Works

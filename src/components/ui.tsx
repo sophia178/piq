@@ -6,7 +6,7 @@ type LinkHref = ComponentProps<typeof Link>["href"];
 
 export function Logo() {
   return (
-    <div className="flex items-center gap-3">
+    <Link href="/dashboard" className="flex items-center gap-3">
       <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-brand/15 text-sm font-semibold text-brand-subtle ring-1 ring-white/10">
         PI
       </div>
@@ -14,7 +14,7 @@ export function Logo() {
         <p className="text-sm font-semibold text-white">PursuitIQ</p>
         <p className="text-xs text-slate-400">Win Intelligence Platform</p>
       </div>
-    </div>
+    </Link>
   );
 }
 

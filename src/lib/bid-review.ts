@@ -1058,6 +1058,13 @@ export async function syncBidReviewForProject(input: {
   await syncPredictForProject({
     organizationId: input.organizationId,
     projectId: input.projectId,
+    snapshot,
+    reviewSnapshot: {
+      latestReview: persisted.latestReview,
+      reviewFindings: persisted.reviewFindings,
+      reviewRecommendations: persisted.reviewRecommendations,
+      reviewHistory: persisted.latestReview ? [persisted.latestReview] : [],
+    },
   });
 
   await trackAuditEvent({
@@ -1076,12 +1083,17 @@ export async function syncBidReviewForProject(input: {
   return persisted;
 }
 
-export async function getBidReviewSnapshot(projectId: string, organizationId?: string): Promise<BidReviewSnapshot> {
+export async function getBidReviewSnapshot(
+  projectId: string,
+  organizationId?: string,
+  snapshot?: BidWorkspaceSnapshot,
+): Promise<BidReviewSnapshot> {
   const supabase = createServiceSupabaseClient();
   if (!supabase || !organizationId) {
     const generated = await syncBidReviewForProject({
       projectId,
       organizationId,
+      snapshot,
     });
     return {
       latestReview: generated.latestReview,
@@ -1100,7 +1112,7 @@ export async function getBidReviewSnapshot(projectId: string, organizationId?: s
     .limit(8);
 
   if (!historyRows || historyRows.length === 0) {
-    const generated = await syncBidReviewForProject({ projectId, organizationId });
+    const generated = await syncBidReviewForProject({ projectId, organizationId, snapshot });
     return {
       latestReview: generated.latestReview,
       reviewFindings: generated.reviewFindings,

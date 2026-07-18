@@ -11,11 +11,9 @@ import { getAuthenticatedAppContext } from "@/lib/platform";
 export default async function WorkspacePage({ params }: { params: Promise<{ projectId: string }> }) {
   const { projectId } = await params;
   const { organization, organizationId } = await getAuthenticatedAppContext();
-  const [snapshot, reviewSnapshot, prediction] = await Promise.all([
-    getBidWorkspaceSnapshot(projectId, organizationId),
-    getBidReviewSnapshot(projectId, organizationId),
-    getProjectPredictionSummary(projectId, organizationId),
-  ]);
+  const snapshot = await getBidWorkspaceSnapshot(projectId, organizationId);
+  const reviewSnapshot = await getBidReviewSnapshot(projectId, organizationId, snapshot);
+  const prediction = await getProjectPredictionSummary(projectId, organizationId, snapshot, reviewSnapshot);
 
   return (
     <AppShell title="Workspace" eyebrow="Submission" organization={organization} workspaceHref={`/projects/${projectId}/workspace` as Route}>

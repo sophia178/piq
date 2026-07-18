@@ -17,8 +17,8 @@ import OpenAI from "openai";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { z } from "zod";
 import { env, hasOpenAIEnv } from "@/lib/env";
-import { getBidReviewSnapshot } from "@/lib/bid-review";
-import { getBidWorkspaceSnapshot, type BidSectionKey, type BidSectionRecord } from "@/lib/bid-workspace";
+import { getBidReviewSnapshot, type BidReviewSnapshot } from "@/lib/bid-review";
+import { getBidWorkspaceSnapshot, type BidSectionKey, type BidSectionRecord, type BidWorkspaceSnapshot } from "@/lib/bid-workspace";
 import {
   getKnowledgeDocumentTypeLabel,
   loadKnowledgeCoverageForTender,
@@ -558,9 +558,14 @@ async function maybeEnhanceValidationWithAI(input: {
   return input.validation;
 }
 
-export async function runSubmissionValidation(input: z.infer<typeof SubmissionValidationRunSchema>) {
-  const workspace = await getBidWorkspaceSnapshot(input.projectId, input.organizationId);
-  const review = await getBidReviewSnapshot(input.projectId, input.organizationId);
+export async function runSubmissionValidation(
+  input: z.infer<typeof SubmissionValidationRunSchema> & {
+    workspace?: BidWorkspaceSnapshot;
+    review?: BidReviewSnapshot;
+  },
+) {
+  const workspace = input.workspace ?? (await getBidWorkspaceSnapshot(input.projectId, input.organizationId));
+  const review = input.review ?? (await getBidReviewSnapshot(input.projectId, input.organizationId, workspace));
   const { selectedTemplate } = await getTemplateById(input.organizationId, input.templateId, workspace.project.tenderName);
 
   const sectionMap = new Map<BidSectionKey, BidSectionRecord>(workspace.bidSections.map((section) => [section.sectionKey, section]));
@@ -1057,11 +1062,13 @@ async function buildExportArtifacts(input: z.infer<typeof SubmissionExportReques
   const organization = await getActiveOrganizationContext();
   const organizationId = input.organizationId ?? (organization.id === "org_demo" ? undefined : organization.id);
   const workspace = await getBidWorkspaceSnapshot(input.projectId, organizationId);
-  const review = await getBidReviewSnapshot(input.projectId, organizationId);
+  const review = await getBidReviewSnapshot(input.projectId, organizationId, workspace);
   const validation = await runSubmissionValidation({
     organizationId,
     projectId: input.projectId,
     templateId: input.templateId,
+    workspace,
+    review,
   });
   const { selectedTemplate } = await getTemplateById(organizationId, input.templateId, workspace.project.tenderName);
   const branding = await getOrganizationBrandingSettings(organizationId, organization);
@@ -1264,12 +1271,14 @@ export async function getSubmissionExportWorkspaceSnapshot(
   const organization = await getActiveOrganizationContext();
   const activeOrganizationId = organizationId ?? (organization.id === "org_demo" ? undefined : organization.id);
   const workspace = await getBidWorkspaceSnapshot(projectId, activeOrganizationId);
-  const review = await getBidReviewSnapshot(projectId, activeOrganizationId);
+  const review = await getBidReviewSnapshot(projectId, activeOrganizationId, workspace);
   const { templates, selectedTemplate } = await getTemplateById(activeOrganizationId, templateId, workspace.project.tenderName);
   const validation = await runSubmissionValidation({
     organizationId: activeOrganizationId,
     projectId,
     templateId: selectedTemplate.id,
+    workspace,
+    review,
   });
   const branding = await getOrganizationBrandingSettings(activeOrganizationId, organization);
   const exportHistory = await getExportHistory(projectId, activeOrganizationId);

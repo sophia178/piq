@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
     await supabase.auth.signOut();
     await trackAuditEvent({ action: "auth.logout", entityType: "user" });
 
-    return NextResponse.json({ message: "Logged out successfully." });
+    return NextResponse.redirect(new URL("/login", request.url));
   } catch (error) {
     console.error('Logout error:', error);
     return NextResponse.json({ error: "Failed to logout." }, { status: 500 });

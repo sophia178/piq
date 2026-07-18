@@ -75,7 +75,7 @@ export function MarketingSiteShell({
               Sign in
             </MarketingButton>
             <MarketingButton href="/signup" variant="primary" trailingArrow pulse>
-              Get Started Free
+              Start 7-Day Free Trial
             </MarketingButton>
           </div>
 
@@ -113,7 +113,7 @@ export function MarketingSiteShell({
                     Sign in
                   </MarketingButton>
                   <MarketingButton href="/signup" trailingArrow pulse className="w-full">
-                    Get Started Free
+                    Start 7-Day Free Trial
                   </MarketingButton>
                 </div>
               </div>
@@ -167,7 +167,7 @@ export function MarketingSiteShell({
               <div className="mt-4 grid gap-3 text-sm text-slate-400">
                 <MarketingLink href="/privacy">Privacy Policy</MarketingLink>
                 <MarketingLink href="/terms">Terms</MarketingLink>
-                <MarketingLink href="/signup">Start free trial</MarketingLink>
+                <MarketingLink href="/signup">Start 7-Day Free Trial</MarketingLink>
               </div>
             </div>
           </div>

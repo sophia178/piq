@@ -4,7 +4,7 @@ import type { ComponentProps, ReactNode } from "react";
 import { BarChart3, BookOpen, BrainCircuit, CreditCard, FileOutput, FileSearch, FolderKanban, LibraryBig, LayoutDashboard, LogOut, Megaphone, Search, ShieldCheck, Trophy } from "lucide-react";
 import { demoOrganization, type OrganizationProfile, getRecentProject } from "@/lib/platform";
 import { cn } from "@/lib/utils";
-import { Badge, Logo, Button } from "@/components/ui";
+import { Badge, Logo } from "@/components/ui";
 
 type LinkHref = ComponentProps<typeof Link>["href"];
 
@@ -81,23 +81,13 @@ export function AppShell({
             </div>
           </div>
         </div>
-        <form
-          action={async () => {
-            "use server";
-            const { redirect } = await import("next/navigation");
-            await fetch(`${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/api/auth/logout`, {
-              method: "POST",
-            });
-            redirect("/login");
-          }}
-          className="mt-8 pt-4 border-t border-white/10"
-        >
+        <form action="/api/auth/logout" method="post" className="mt-8 border-t border-white/10 pt-4">
           <button
             type="submit"
-            className="w-full flex items-center gap-3 rounded-2xl px-4 py-3 text-sm text-slate-300 transition hover:bg-white/5 hover:text-white"
+            className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm text-slate-300 transition hover:bg-white/5 hover:text-white"
           >
             <LogOut className="h-4 w-4" />
-            <span>Logout</span>
+            <span>Log out</span>
           </button>
         </form>
       </aside>

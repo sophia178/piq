@@ -1,14 +1,15 @@
 export const dynamic = 'force-dynamic';
 import { AppShell } from "@/components/app-shell";
 import { Card } from "@/components/ui";
-import { getDashboardSnapshot } from "@/lib/platform";
+import { getAuthenticatedAppContext, getDashboardSnapshot } from "@/lib/platform";
 import { formatCurrency, formatPercent } from "@/lib/utils";
 
-export default function AdminPage() {
+export default async function AdminPage() {
+  const { organization } = await getAuthenticatedAppContext();
   const snapshot = getDashboardSnapshot();
 
   return (
-    <AppShell title="Admin" eyebrow="Internal">
+    <AppShell title="Admin" eyebrow="Internal" organization={organization}>
       <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
         <Card className="p-6">
           <p className="text-xs uppercase tracking-[0.24em] text-slate-500">Users</p>
