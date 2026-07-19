@@ -79,10 +79,40 @@ export function KnowledgeEngineBoard({
         method: "POST",
         body: payload,
       });
-      const result = (await response.json()) as { error?: string; chunkCount?: number };
+      const result = (await response.json()) as { 
+        error?: string; 
+        chunkCount?: number;
+        issues?: { 
+          formErrors: string[];
+          fieldErrors: Record<string, string[]>;
+        };
+      };
 
       if (result.error) {
-        setStatus(result.error);
+        let message = result.error;
+        // Map field errors to plain-language messages
+        if (result.issues) {
+          const fieldMessages: string[] = [];
+          if (result.issues.fieldErrors.organizationId) {
+            fieldMessages.push("Organisation context is required.");
+          }
+          if (result.issues.fieldErrors.title) {
+            fieldMessages.push("Title must be at least 3 characters.");
+          }
+          if (result.issues.fieldErrors.documentType) {
+            fieldMessages.push("Please select a valid document type.");
+          }
+          if (result.issues.fieldErrors.storagePath) {
+            fieldMessages.push("Unable to process file storage path.");
+          }
+          if (result.issues.fieldErrors.extractedText) {
+            fieldMessages.push("The file content is too short (minimum 20 characters).");
+          }
+          if (fieldMessages.length > 0) {
+            message = fieldMessages.join(" ");
+          }
+        }
+        setStatus(message);
         return;
       }
 

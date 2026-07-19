@@ -76,26 +76,31 @@ export function AppShell({
 }
 
 async function NavigationLinks({ title, workspaceHref }: { title: string; workspaceHref?: LinkHref }) {
-  let workspaceLink = workspaceHref ?? "/dashboard";
+  let workspaceLink = workspaceHref ?? null;
+  let hasNoProjects = false;
 
   if (!workspaceHref) {
     try {
       const recentProject = await getRecentProject();
       if (recentProject) {
         workspaceLink = `/projects/${recentProject.id}/workspace` as Route;
+      } else {
+        hasNoProjects = true;
+        workspaceLink = "/opportunities";
       }
     } catch (error) {
       console.error("Failed to get recent project:", error);
-      workspaceLink = "/dashboard";
+      hasNoProjects = true;
+      workspaceLink = "/opportunities";
     }
   }
 
-  const navigation: Array<{ href: LinkHref; label: string; icon: typeof LayoutDashboard }> = [
+  const navigation: Array<{ href: LinkHref; label: string; icon: typeof LayoutDashboard; subtitle?: string }> = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/opportunities", label: "Opportunities", icon: Search },
     { href: "/predict", label: "Predict", icon: BrainCircuit },
     { href: "/outcomes", label: "Outcomes", icon: Trophy },
-    { href: workspaceLink, label: "Workspace", icon: FolderKanban },
+    { href: workspaceLink as LinkHref, label: "Workspace", icon: FolderKanban, subtitle: hasNoProjects ? "Create your first opportunity to get started" : undefined },
     { href: "/reviews", label: "Reviews", icon: FileSearch },
     { href: "/exports", label: "Exports", icon: FileOutput },
     { href: "/knowledge", label: "Knowledge", icon: BookOpen },
@@ -105,17 +110,22 @@ async function NavigationLinks({ title, workspaceHref }: { title: string; worksp
 
   return (
     <>
-      {navigation.map(({ href, label, icon: Icon }) => (
+      {navigation.map(({ href, label, icon: Icon, subtitle }) => (
         <Link
           key={label}
           href={href}
           className={cn(
-            "flex items-center gap-3 rounded-2xl px-4 py-3 text-sm text-slate-300 transition hover:bg-white/5 hover:text-white",
+            "flex flex-col gap-1 rounded-2xl px-4 py-3 text-sm text-slate-300 transition hover:bg-white/5 hover:text-white",
             title === label ? "bg-teal-400/10 text-white ring-1 ring-teal-300/20" : "",
           )}
         >
-          <Icon className="h-4 w-4" />
-          <span>{label}</span>
+          <div className="flex items-center gap-3">
+            <Icon className="h-4 w-4" />
+            <span>{label}</span>
+          </div>
+          {subtitle ? (
+            <span className="text-[10px] text-slate-500 ml-7">{subtitle}</span>
+          ) : null}
         </Link>
       ))}
     </>
