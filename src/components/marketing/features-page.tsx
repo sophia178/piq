@@ -74,7 +74,7 @@ export function MarketingFeaturesPage() {
         <section className="mx-auto max-w-7xl px-5 py-24 lg:px-8">
           <SectionReveal>
             <div className="max-w-3xl">
-              <p className="text-sm font-semibold uppercase tracking-[0.28em] text-brand-subtle">Engine Overview</p>
+              <p className="text-sm font-semibold uppercase tracking-[0.28em] text-brand-subtle">Workflow Modules</p>
               <h2 className="mt-4 text-4xl font-semibold tracking-[-0.04em] text-white sm:text-5xl">
                 A connected stack, not disconnected tools.
               </h2>
@@ -108,12 +108,11 @@ export function MarketingFeaturesPage() {
                         </div>
                       </div>
                       <div className="rounded-[1.4rem] border border-white/10 bg-[#0f1219] p-5">
-                        <p className="text-sm font-medium text-white">Signals</p>
-                        <div className="mt-4 grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
-                          {engine.metrics.map((metric) => (
-                            <div key={metric.label} className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
-                              <p className="text-xs uppercase tracking-[0.16em] text-slate-500">{metric.label}</p>
-                              <p className="mt-2 text-2xl font-semibold text-white">{metric.value}</p>
+                        <p className="text-sm font-medium text-white">What teams get back</p>
+                        <div className="mt-4 grid gap-3">
+                          {engine.outputs.map((output) => (
+                            <div key={output} className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
+                              <p className="text-sm text-slate-200">{output}</p>
                             </div>
                           ))}
                         </div>

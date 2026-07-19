@@ -1,37 +1,36 @@
 export const dynamic = 'force-dynamic';
-import { GrowthEngineBoard } from "@/components/growth-engine-board";
 import { AppShell } from "@/components/app-shell";
-import { Badge, Card } from "@/components/ui";
-import { getGrowthEngineSnapshot } from "@/lib/growth";
+import { Button, Card } from "@/components/ui";
 import { getAuthenticatedAppContext } from "@/lib/platform";
-import { formatPercent } from "@/lib/utils";
+import { getOpportunityDiscoverySnapshot } from "@/lib/opportunities";
+import { formatCurrency } from "@/lib/utils";
 
 export default async function GrowthPage() {
-  const { organization } = await getAuthenticatedAppContext();
-  const snapshot = getGrowthEngineSnapshot();
+  const { organization, organizationId } = await getAuthenticatedAppContext();
+  const snapshot = await getOpportunityDiscoverySnapshot(organizationId);
 
   return (
-    <AppShell title="Growth Engine" eyebrow="LinkedIn" organization={organization}>
+    <AppShell title="Discovery Workflow" eyebrow="Pipeline" organization={organization}>
       <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-5">
         <Card className="p-5">
-          <p className="text-xs uppercase tracking-[0.24em] text-slate-500">Impressions</p>
-          <p className="mt-3 text-3xl font-semibold text-white">{snapshot.metrics.impressions.toLocaleString()}</p>
+          <p className="text-xs uppercase tracking-[0.24em] text-slate-500">New opportunities</p>
+          <p className="mt-3 text-3xl font-semibold text-white">{snapshot.metrics.newOpportunities}</p>
         </Card>
         <Card className="p-5">
-          <p className="text-xs uppercase tracking-[0.24em] text-slate-500">Clicks</p>
-          <p className="mt-3 text-3xl font-semibold text-white">{snapshot.metrics.clicks.toLocaleString()}</p>
+          <p className="text-xs uppercase tracking-[0.24em] text-slate-500">Saved opportunities</p>
+          <p className="mt-3 text-3xl font-semibold text-white">{snapshot.metrics.savedOpportunities}</p>
         </Card>
         <Card className="p-5">
-          <p className="text-xs uppercase tracking-[0.24em] text-slate-500">Signups</p>
-          <p className="mt-3 text-3xl font-semibold text-white">{snapshot.metrics.signups.toLocaleString()}</p>
+          <p className="text-xs uppercase tracking-[0.24em] text-slate-500">High fit opportunities</p>
+          <p className="mt-3 text-3xl font-semibold text-white">{snapshot.metrics.highMatchOpportunities}</p>
         </Card>
         <Card className="p-5">
-          <p className="text-xs uppercase tracking-[0.24em] text-slate-500">Trials</p>
-          <p className="mt-3 text-3xl font-semibold text-white">{snapshot.metrics.trials.toLocaleString()}</p>
+          <p className="text-xs uppercase tracking-[0.24em] text-slate-500">Scans last 7 days</p>
+          <p className="mt-3 text-3xl font-semibold text-white">{snapshot.metrics.scansLast7Days}</p>
         </Card>
         <Card className="p-5">
-          <p className="text-xs uppercase tracking-[0.24em] text-slate-500">Paid conversions</p>
-          <p className="mt-3 text-3xl font-semibold text-white">{snapshot.metrics.paidConversions.toLocaleString()}</p>
+          <p className="text-xs uppercase tracking-[0.24em] text-slate-500">Contracts won</p>
+          <p className="mt-3 text-3xl font-semibold text-white">{snapshot.organizationReport.contractsWon}</p>
         </Card>
       </section>
 
@@ -39,47 +38,55 @@ export default async function GrowthPage() {
         <Card className="p-5">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-xs uppercase tracking-[0.24em] text-slate-500">Mix strategy</p>
-              <h2 className="mt-2 text-xl font-semibold text-white">Content allocation</h2>
+              <p className="text-xs uppercase tracking-[0.24em] text-slate-500">Best opportunities</p>
+              <h2 className="mt-2 text-xl font-semibold text-white">Prioritise the next bids to qualify</h2>
             </div>
-            <Badge className="bg-emerald-500/10 text-emerald-200">Optimized for paid conversions</Badge>
+            <Button href="/opportunities">Open discovery board</Button>
           </div>
           <div className="mt-5 space-y-4">
-            {snapshot.mixSummary.map((item) => (
-              <div key={item.pillar} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <div className="flex items-center justify-between gap-3">
-                  <p className="text-sm font-semibold text-white">{item.label}</p>
-                  <Badge>{item.scheduled} scheduled</Badge>
+            {(snapshot.bestOpportunities.length > 0 ? snapshot.bestOpportunities : snapshot.savedOpportunities).slice(0, 6).map((item) => (
+              <div key={item.id} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-white">{item.title}</p>
+                    <p className="mt-2 text-sm text-slate-400">
+                      {item.buyerName} • Deadline {item.submissionDeadline ? new Date(item.submissionDeadline).toLocaleDateString("en-GB") : "TBC"}
+                    </p>
+                  </div>
+                  <span className="rounded-full border border-white/10 bg-slate-950/60 px-3 py-1 text-xs text-slate-200">
+                    {item.priority?.priorityBand ?? "Review"}
+                  </span>
                 </div>
-                <p className="mt-2 text-sm text-slate-300">Target share: {formatPercent(item.target * 100)}</p>
+                <p className="mt-3 text-sm text-slate-300">
+                  Estimated value {formatCurrency(item.roi?.estimatedContractValue ?? item.estimatedValue ?? null)}
+                </p>
               </div>
             ))}
           </div>
         </Card>
         <Card className="p-5">
-          <p className="text-xs uppercase tracking-[0.24em] text-slate-500">Winning patterns</p>
-          <h2 className="mt-2 text-xl font-semibold text-white">Highest-converting combinations</h2>
+          <p className="text-xs uppercase tracking-[0.24em] text-slate-500">Pipeline health</p>
+          <h2 className="mt-2 text-xl font-semibold text-white">Move imported opportunities into live bids</h2>
           <div className="mt-5 space-y-4">
-            {snapshot.topPatterns.map((pattern) => (
-              <div key={pattern.label} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <p className="text-sm font-semibold text-white">{pattern.label}</p>
-                <p className="mt-2 text-sm text-slate-300">
-                  {pattern.paidConversions} paid conversions • {pattern.trials} trials • {pattern.clickToPaidRate} click-to-paid rate
-                </p>
+            {[
+              ["Opportunities found", snapshot.organizationReport.opportunitiesFound],
+              ["Imported to workspace", snapshot.organizationReport.opportunitiesPursued],
+              ["Bids submitted", snapshot.organizationReport.bidsSubmitted],
+              ["Contracts won", snapshot.organizationReport.contractsWon],
+            ].map(([label, value]) => (
+              <div key={label} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                <p className="text-sm font-semibold text-white">{label}</p>
+                <p className="mt-2 text-2xl font-semibold text-white">{value}</p>
               </div>
             ))}
           </div>
           <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-            <p className="text-sm font-semibold text-white">Coverage</p>
-            <p className="mt-2 text-sm text-slate-300">Regions: {snapshot.regions.join(", ")}</p>
-            <p className="mt-2 text-sm text-slate-300">Audiences: {snapshot.audiences.join(", ")}</p>
-            <p className="mt-2 text-sm text-slate-300">Repetition lockout: {snapshot.repetitionWindowDays} days</p>
+            <p className="text-sm font-semibold text-white">Outcome value won</p>
+            <p className="mt-2 text-sm text-slate-300">
+              {formatCurrency(snapshot.organizationReport.totalContractValueWon)} recorded across bids marked won.
+            </p>
           </div>
         </Card>
-      </section>
-
-      <section className="mt-8">
-        <GrowthEngineBoard initialPosts={snapshot.plannedPosts} />
       </section>
     </AppShell>
   );

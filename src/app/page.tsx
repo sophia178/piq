@@ -2,13 +2,13 @@ import type { Metadata } from "next";
 import { MarketingHomePage } from "@/components/marketing/home-page";
 
 export const metadata: Metadata = {
-  title: "PursuitIQ | Win more contracts with AI.",
+  title: "PursuitIQ | AI bid workflow for procurement teams.",
   description:
-    "PursuitIQ is the Win Intelligence Platform for procurement teams. Find the right opportunities, draft stronger bids, review submissions, predict win probability, and learn from every outcome.",
+    "PursuitIQ is the AI bid workflow for procurement teams. Discover opportunities, build knowledge-backed responses, review submissions, export bid packs, and learn from every outcome.",
   openGraph: {
-    title: "PursuitIQ | Win more contracts with AI.",
+    title: "PursuitIQ | AI bid workflow for procurement teams.",
     description:
-      "Find, qualify, draft, review, and predict with one enterprise-grade Win Intelligence Platform for procurement teams.",
+      "Discover opportunities, build knowledge-backed responses, review submissions, export bid packs, and learn from every outcome.",
   },
 };
 
@@ -20,7 +20,7 @@ export default function HomePage() {
     applicationCategory: "BusinessApplication",
     operatingSystem: "Web",
     description:
-      "PursuitIQ helps bid teams find opportunities, write better bids, predict win probability, and learn from every result. The AI platform for winning public sector contracts.",
+      "PursuitIQ helps bid teams discover opportunities, build knowledge-backed responses, review submissions, export bid packs, and learn from outcomes.",
     url: "https://pursuitiq.com/",
   };
 

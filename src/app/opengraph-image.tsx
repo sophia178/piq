@@ -44,10 +44,10 @@ export default function OpenGraphImage() {
             </div>
           </div>
           <div style={{ fontSize: 54, fontWeight: 700, lineHeight: 1.05, letterSpacing: -1.4 }}>
-            Win more public sector contracts with AI.
+            Build stronger bids in one connected workflow.
           </div>
           <div style={{ fontSize: 22, lineHeight: 1.35, color: "rgba(226,232,240,0.86)" }}>
-            Find opportunities. Write better bids. Predict win probability. Learn from every result.
+            Discover opportunities. Draft with evidence. Review, export, and learn from each outcome.
           </div>
         </div>
       </div>
@@ -55,4 +55,3 @@ export default function OpenGraphImage() {
     size,
   );
 }
-

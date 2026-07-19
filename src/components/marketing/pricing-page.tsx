@@ -14,12 +14,12 @@ const buyingPoints = [
   {
     icon: Building2,
     title: "Scales from consultant to agency",
-    description: "Use PursuitIQ as an individual advisor or roll it out across a team with enterprise workflows and API access.",
+    description: "Use PursuitIQ as an individual advisor or expand it across a team with shared workspaces, exports, and knowledge governance.",
   },
   {
     icon: ShieldCheck,
-    title: "Enterprise-grade operating model",
-    description: "Bring qualification, drafting, review, knowledge, and insight workflows into a single repeatable process.",
+    title: "Operationally grounded workflow",
+    description: "Bring qualification, drafting, review, knowledge, and export preparation into one repeatable process.",
   },
 ] as const;
 
@@ -35,7 +35,7 @@ export function MarketingPricingPage() {
                 Clear pricing for serious procurement teams.
               </h1>
               <p className="mt-6 text-lg leading-8 text-slate-300">
-                Choose the plan that fits your bid volume today, then scale into full pursuit intelligence as your pipeline grows.
+                Choose the plan that fits your bid volume today, then add more seats and governance as your submission workflow grows.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <MarketingButton href="/signup" trailingArrow>
@@ -75,13 +75,13 @@ export function MarketingPricingPage() {
             <div className="overflow-hidden rounded-[2.2rem] border border-white/10 bg-[linear-gradient(135deg,rgba(37,99,235,0.18),rgba(17,22,30,0.96)_48%,rgba(10,10,15,0.98))] p-8 sm:p-10">
               <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
                 <div className="max-w-2xl">
-                  <p className="text-sm font-semibold uppercase tracking-[0.28em] text-brand-subtle">Need enterprise rollout?</p>
+                  <p className="text-sm font-semibold uppercase tracking-[0.28em] text-brand-subtle">Need tailored onboarding?</p>
                   <h2 className="mt-4 text-4xl font-semibold tracking-[-0.05em] text-white sm:text-5xl">
-                    We help procurement teams operationalise qualification, drafting, and review.
+                    We help procurement teams operationalise qualification, drafting, review, and export readiness.
                   </h2>
                 </div>
                 <MarketingButton href="/signup" trailingArrow>
-                  Start with SME
+                  Start 7-Day Free Trial
                 </MarketingButton>
               </div>
               <div className="mt-8 grid gap-4 sm:grid-cols-3">

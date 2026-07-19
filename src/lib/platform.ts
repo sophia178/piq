@@ -60,6 +60,58 @@ export interface OrganizationProfile {
   location: string;
 }
 
+export interface DashboardProjectSnapshot {
+  id: string;
+  title: string;
+  tenderName: string;
+  issuingBody: string;
+  submissionDeadline: string | null;
+  estimatedContractValue?: number;
+  status: ProjectStatus;
+  readinessScore: number;
+  updatedAt: string | null;
+  totalRequirements: number;
+  completedRequirements: number;
+  draftedRequirements: number;
+  pendingRequirements: number;
+  pendingMandatoryRequirements: number;
+}
+
+export interface DashboardDocumentSnapshot {
+  id: string;
+  title: string;
+  documentType: string;
+  uploadedAt: string | null;
+}
+
+export interface DashboardExportSnapshot {
+  id: string;
+  projectId: string;
+  fileName: string;
+  exportType: string;
+  generatedAt: string | null;
+}
+
+export interface DashboardRecommendation {
+  title: string;
+  detail: string;
+  href: string;
+}
+
+export interface DashboardSnapshot {
+  metrics: {
+    activeProjects: number;
+    upcomingDeadlines: number;
+    recentUploads: number;
+    tasksRequiringAttention: number;
+    organizationReadiness: number;
+  };
+  projects: DashboardProjectSnapshot[];
+  recentUploads: DashboardDocumentSnapshot[];
+  recentExports: DashboardExportSnapshot[];
+  recommendations: DashboardRecommendation[];
+}
+
 export const AuthSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
@@ -707,20 +759,218 @@ export async function exportProjectDocument(input: z.infer<typeof ExportSchema>)
   };
 }
 
-export function getDashboardSnapshot() {
-  return {
-    organization: demoOrganization,
-    projects: demoProjects,
-    requirements: demoRequirements,
-    compliance: demoCompliance,
-    responses: demoResponses,
-    analytics: {
-      uploads: 146,
-      generatedResponses: 612,
-      exports: 89,
-      activeUsers: 24,
-      conversionRate: 18.4,
-      revenue: 7940,
+export async function getDashboardSnapshot(organizationId?: string): Promise<DashboardSnapshot> {
+  const emptySnapshot: DashboardSnapshot = {
+    metrics: {
+      activeProjects: 0,
+      upcomingDeadlines: 0,
+      recentUploads: 0,
+      tasksRequiringAttention: 0,
+      organizationReadiness: 0,
     },
+    projects: [],
+    recentUploads: [],
+    recentExports: [],
+    recommendations: [
+      {
+        title: "Import your first opportunity",
+        detail: "Create a live workspace by importing an opportunity or uploading a tender pack.",
+        href: "/opportunities",
+      },
+      {
+        title: "Upload organization evidence",
+        detail: "Add case studies, policies, CVs, and certifications before generating draft responses.",
+        href: "/knowledge",
+      },
+    ],
+  };
+
+  const supabase = createServiceSupabaseClient();
+  if (!supabase || !organizationId) {
+    return emptySnapshot;
+  }
+
+  const projectsResponse = await supabase
+    .from("projects")
+    .select("id, title, tender_name, issuing_body, submission_deadline, estimated_contract_value, status, readiness_score, updated_at")
+    .eq("organization_id", organizationId)
+    .order("updated_at", { ascending: false })
+    .limit(12);
+
+  if (projectsResponse.error) {
+    return emptySnapshot;
+  }
+
+  const projectRows = (projectsResponse.data ?? []) as Array<Record<string, unknown>>;
+  const projectIds = projectRows.map((row) => String(row.id));
+
+  const requirementsResponse =
+    projectIds.length > 0
+      ? await supabase.from("requirements").select("project_id, mandatory, response_status").in("project_id", projectIds)
+      : { data: [], error: null };
+
+  const uploadsResponse = await supabase
+    .from("knowledge_documents")
+    .select("id, title, document_type, upload_date, created_at")
+    .eq("organization_id", organizationId)
+    .order("upload_date", { ascending: false })
+    .limit(6);
+
+  const exportsResponse = await supabase
+    .from("export_history")
+    .select("id, project_id, file_name, export_type, generated_at")
+    .eq("organization_id", organizationId)
+    .order("generated_at", { ascending: false })
+    .limit(6);
+
+  const requirementsByProject = new Map<
+    string,
+    { total: number; complete: number; drafted: number; pending: number; pendingMandatory: number }
+  >();
+
+  for (const row of ((requirementsResponse.data ?? []) as Array<Record<string, unknown>>)) {
+    const projectId = String(row.project_id ?? "");
+    if (!projectId) continue;
+
+    const bucket =
+      requirementsByProject.get(projectId) ?? { total: 0, complete: 0, drafted: 0, pending: 0, pendingMandatory: 0 };
+    const status = String(row.response_status ?? "todo");
+    const mandatory = Boolean(row.mandatory);
+
+    bucket.total += 1;
+    if (status === "complete") {
+      bucket.complete += 1;
+    } else if (status === "drafted") {
+      bucket.drafted += 1;
+      bucket.pending += 1;
+      if (mandatory) {
+        bucket.pendingMandatory += 1;
+      }
+    } else {
+      bucket.pending += 1;
+      if (mandatory) {
+        bucket.pendingMandatory += 1;
+      }
+    }
+
+    requirementsByProject.set(projectId, bucket);
+  }
+
+  const now = Date.now();
+  const fourteenDaysFromNow = now + 14 * 24 * 60 * 60 * 1000;
+
+  const projects: DashboardProjectSnapshot[] = projectRows.map((row) => {
+    const projectId = String(row.id);
+    const requirementStats =
+      requirementsByProject.get(projectId) ?? { total: 0, complete: 0, drafted: 0, pending: 0, pendingMandatory: 0 };
+
+    return {
+      id: projectId,
+      title: String(row.title ?? row.tender_name ?? "Untitled project"),
+      tenderName: String(row.tender_name ?? row.title ?? "Untitled project"),
+      issuingBody: String(row.issuing_body ?? "Unknown buyer"),
+      submissionDeadline: (row.submission_deadline as string | null) ?? null,
+      estimatedContractValue: Number(row.estimated_contract_value ?? 0) || undefined,
+      status: (row.status as ProjectStatus | null) ?? "draft",
+      readinessScore: Number(row.readiness_score ?? 0),
+      updatedAt: (row.updated_at as string | null) ?? null,
+      totalRequirements: requirementStats.total,
+      completedRequirements: requirementStats.complete,
+      draftedRequirements: requirementStats.drafted,
+      pendingRequirements: requirementStats.pending,
+      pendingMandatoryRequirements: requirementStats.pendingMandatory,
+    };
+  });
+
+  const activeProjects = projects.filter((project) => project.status !== "submitted" && project.status !== "archived");
+  const upcomingDeadlines = activeProjects.filter((project) => {
+    if (!project.submissionDeadline) return false;
+    const deadline = new Date(project.submissionDeadline).getTime();
+    return deadline >= now && deadline <= fourteenDaysFromNow;
+  });
+
+  const tasksRequiringAttention = activeProjects.reduce((sum, project) => {
+    const lowReadinessTask = project.readinessScore < 80 ? 1 : 0;
+    const deadlineTask =
+      project.submissionDeadline && new Date(project.submissionDeadline).getTime() <= fourteenDaysFromNow ? 1 : 0;
+    return sum + lowReadinessTask + deadlineTask + project.pendingMandatoryRequirements;
+  }, 0);
+
+  const readinessBase = activeProjects.length > 0 ? activeProjects : projects;
+  const organizationReadiness =
+    readinessBase.length > 0
+      ? Math.round(readinessBase.reduce((sum, project) => sum + project.readinessScore, 0) / readinessBase.length)
+      : 0;
+
+  const recentUploads: DashboardDocumentSnapshot[] = ((uploadsResponse.data ?? []) as Array<Record<string, unknown>>).map((row) => ({
+    id: String(row.id),
+    title: String(row.title ?? "Untitled document"),
+    documentType: String(row.document_type ?? "document"),
+    uploadedAt: (row.upload_date as string | null) ?? (row.created_at as string | null) ?? null,
+  }));
+
+  const recentExports: DashboardExportSnapshot[] = ((exportsResponse.data ?? []) as Array<Record<string, unknown>>).map((row) => ({
+    id: String(row.id),
+    projectId: String(row.project_id ?? ""),
+    fileName: String(row.file_name ?? "submission-export"),
+    exportType: String(row.export_type ?? "export"),
+    generatedAt: (row.generated_at as string | null) ?? null,
+  }));
+
+  const recommendations: DashboardRecommendation[] = [];
+  if (projects.length === 0) {
+    recommendations.push({
+      title: "Create the first workspace",
+      detail: "Import a tender opportunity to start requirement extraction, drafting, and review in one place.",
+      href: "/opportunities",
+    });
+  }
+
+  if (recentUploads.length === 0) {
+    recommendations.push({
+      title: "Upload company knowledge",
+      detail: "Add case studies, policies, CVs, and certifications before asking AI to draft responses.",
+      href: "/knowledge",
+    });
+  }
+
+  const urgentProject = upcomingDeadlines.find((project) => project.readinessScore < 80) ?? upcomingDeadlines[0];
+  if (urgentProject) {
+    recommendations.push({
+      title: "Prioritize the nearest deadline",
+      detail: `${urgentProject.title} is due soon and needs focused workspace progress before review and export.`,
+      href: `/projects/${urgentProject.id}/workspace`,
+    });
+  }
+
+  const blockedProject = activeProjects.find((project) => project.pendingMandatoryRequirements > 0);
+  if (blockedProject) {
+    recommendations.push({
+      title: "Resolve mandatory gaps",
+      detail: `${blockedProject.title} still has ${blockedProject.pendingMandatoryRequirements} mandatory requirement${blockedProject.pendingMandatoryRequirements === 1 ? "" : "s"} not fully completed.`,
+      href: `/projects/${blockedProject.id}/workspace`,
+    });
+  }
+
+  if (recommendations.length === 0) {
+    recommendations.push({
+      title: "Keep momentum in review",
+      detail: "Open active workspaces, confirm evidence coverage, and move ready bids toward final export.",
+      href: activeProjects[0] ? `/projects/${activeProjects[0].id}/workspace` : "/dashboard",
+    });
+  }
+
+  return {
+    metrics: {
+      activeProjects: activeProjects.length,
+      upcomingDeadlines: upcomingDeadlines.length,
+      recentUploads: recentUploads.length,
+      tasksRequiringAttention,
+      organizationReadiness,
+    },
+    projects,
+    recentUploads,
+    recentExports,
+    recommendations: recommendations.slice(0, 4),
   };
 }

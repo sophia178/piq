@@ -137,18 +137,12 @@ export function MarketingSiteShell({
             <p className="mt-5 max-w-xl text-sm leading-7 text-slate-400">
               {siteTagline} PursuitIQ brings together discovery, drafting, review, prediction, and outcome learning for teams that take procurement seriously.
             </p>
-            <div className="mt-6 flex items-center gap-3">
-              <MarketingLink
-                href="https://www.linkedin.com"
-                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-slate-300 transition hover:border-brand/20 hover:bg-brand/10 hover:text-white"
-              >
-                <span className="text-sm font-semibold">in</span>
+            <div className="mt-6 flex flex-wrap gap-3 text-sm text-slate-400">
+              <MarketingLink href="/features" className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 transition hover:border-brand/20 hover:bg-brand/10 hover:text-white">
+                Explore product
               </MarketingLink>
-              <MarketingLink
-                href="https://x.com"
-                className="inline-flex h-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] px-4 text-sm text-slate-300 transition hover:border-brand/20 hover:bg-brand/10 hover:text-white"
-              >
-                X
+              <MarketingLink href="/pricing" className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 transition hover:border-brand/20 hover:bg-brand/10 hover:text-white">
+                View pricing
               </MarketingLink>
             </div>
           </div>

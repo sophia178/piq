@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Route } from "next";
 import type { ComponentProps, ReactNode } from "react";
-import { BarChart3, BookOpen, BrainCircuit, CreditCard, FileOutput, FileSearch, FolderKanban, LibraryBig, LayoutDashboard, LogOut, Megaphone, Search, ShieldCheck, Trophy } from "lucide-react";
+import { BookOpen, BrainCircuit, CreditCard, FileOutput, FileSearch, FolderKanban, LayoutDashboard, LogOut, Search, ShieldCheck, Trophy } from "lucide-react";
 import { demoOrganization, type OrganizationProfile, getRecentProject } from "@/lib/platform";
 import { cn } from "@/lib/utils";
 import { Badge, Logo } from "@/components/ui";
@@ -22,36 +22,6 @@ export function AppShell({
   children: ReactNode;
 }) {
   const activeOrganization = organization ?? demoOrganization;
-
-  const getNavigation = async () => {
-    let workspaceLink = workspaceHref ?? "/dashboard";
-
-    if (!workspaceHref) {
-      try {
-        const recentProject = await getRecentProject();
-        if (recentProject) {
-          workspaceLink = `/projects/${recentProject.id}/workspace` as Route;
-        }
-      } catch (error) {
-        console.error('Failed to get recent project:', error);
-      }
-    }
-
-    return [
-      { href: "/dashboard" as Route, label: "Dashboard", icon: LayoutDashboard },
-      { href: "/opportunities" as Route, label: "Opportunities", icon: Search },
-      { href: "/predict" as Route, label: "Predict", icon: BrainCircuit },
-      { href: "/outcomes" as Route, label: "Outcomes", icon: Trophy },
-      { href: workspaceLink, label: "Workspace", icon: FolderKanban },
-      { href: "/reviews" as Route, label: "Reviews", icon: FileSearch },
-      { href: "/exports" as Route, label: "Exports", icon: FileOutput },
-      { href: "/knowledge" as Route, label: "Knowledge", icon: BookOpen },
-      { href: "/responses" as Route, label: "Response Library", icon: LibraryBig },
-      { href: "/growth" as Route, label: "Growth Engine", icon: Megaphone },
-      { href: "/billing" as Route, label: "Billing", icon: CreditCard },
-      { href: "/admin" as Route, label: "Admin", icon: BarChart3 },
-    ];
-  };
 
   return (
     <div className="app-shell-grid min-h-screen">
@@ -97,7 +67,7 @@ export function AppShell({
             <p className="text-sm uppercase tracking-[0.28em] text-teal-200">{eyebrow}</p>
             <h1 className="mt-2 text-3xl font-semibold text-white">{title}</h1>
           </div>
-          <Badge className="w-fit bg-white/8 text-slate-200">Production foundation for multi-tenant win intelligence</Badge>
+          <Badge className="w-fit bg-white/8 text-slate-200">AI bid workflow for discovery, drafting, review, prediction, and export</Badge>
         </header>
         {children}
       </main>
@@ -110,18 +80,12 @@ async function NavigationLinks({ title, workspaceHref }: { title: string; worksp
 
   if (!workspaceHref) {
     try {
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Timeout')), 5000)
-      );
-      const recentProject = await Promise.race([
-        getRecentProject(),
-        timeoutPromise
-      ]) as Awaited<ReturnType<typeof getRecentProject>>;
+      const recentProject = await getRecentProject();
       if (recentProject) {
         workspaceLink = `/projects/${recentProject.id}/workspace` as Route;
       }
     } catch (error) {
-      console.error('Failed to get recent project:', error);
+      console.error("Failed to get recent project:", error);
       workspaceLink = "/dashboard";
     }
   }
@@ -135,10 +99,8 @@ async function NavigationLinks({ title, workspaceHref }: { title: string; worksp
     { href: "/reviews", label: "Reviews", icon: FileSearch },
     { href: "/exports", label: "Exports", icon: FileOutput },
     { href: "/knowledge", label: "Knowledge", icon: BookOpen },
-    { href: "/responses", label: "Response Library", icon: LibraryBig },
-    { href: "/growth", label: "Growth Engine", icon: Megaphone },
+    { href: "/growth", label: "Discovery Workflow", icon: Search },
     { href: "/billing", label: "Billing", icon: CreditCard },
-    { href: "/admin", label: "Admin", icon: BarChart3 },
   ];
 
   return (

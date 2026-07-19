@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     template: "%s — PursuitIQ",
   },
   description:
-    "PursuitIQ helps bid teams find opportunities, write better bids, predict win probability, and learn from every result. The AI platform for winning public sector contracts.",
+    "PursuitIQ helps bid teams discover opportunities, build knowledge-backed responses, review submissions, export bid packs, and learn from outcomes.",
   applicationName: "PursuitIQ",
   alternates: {
     canonical: "/",
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "PursuitIQ — Win Intelligence Platform for Procurement Teams",
     description:
-      "PursuitIQ helps bid teams find opportunities, write better bids, predict win probability, and learn from every result. The AI platform for winning public sector contracts.",
+      "PursuitIQ helps bid teams discover opportunities, build knowledge-backed responses, review submissions, export bid packs, and learn from outcomes.",
     siteName: "PursuitIQ",
     type: "website",
     images: [{ url: "/opengraph-image", width: 1200, height: 630 }],
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "PursuitIQ — Win Intelligence Platform for Procurement Teams",
     description:
-      "PursuitIQ helps bid teams find opportunities, write better bids, predict win probability, and learn from every result. The AI platform for winning public sector contracts.",
+      "PursuitIQ helps bid teams discover opportunities, build knowledge-backed responses, review submissions, export bid packs, and learn from outcomes.",
     images: ["/opengraph-image"],
   },
 };
