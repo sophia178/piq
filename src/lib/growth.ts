@@ -210,18 +210,14 @@ const landingPages: Record<LinkedInPillar, string> = {
   product_demonstrations: "/signup?intent=product-demo",
 };
 
-export const demoTopicHistory: LinkedInTopicHistory[] = [
-  { topicKey: "uk-procurement_managers-tender_tips-framework-agreements-0", lastPublishedAt: "2026-06-10T09:00:00.000Z", paidConversions: 2 },
-  { topicKey: "us-it_consultancies-winning_bid_examples-past-performance-positioning-1", lastPublishedAt: "2026-06-08T14:00:00.000Z", paidConversions: 4 },
-  { topicKey: "eu-bid_writers-compliance_guidance-cross-border-procurement-compliance-1", lastPublishedAt: "2026-06-02T11:30:00.000Z", paidConversions: 1 },
-];
+export const defaultTopicHistory: LinkedInTopicHistory[] = [];
 
-export const demoGrowthMetrics: GrowthMetricSnapshot = {
-  impressions: 188400,
-  clicks: 6240,
-  signups: 402,
-  trials: 118,
-  paidConversions: 36,
+export const defaultGrowthMetrics: GrowthMetricSnapshot = {
+  impressions: 0,
+  clicks: 0,
+  signups: 0,
+  trials: 0,
+  paidConversions: 0,
 };
 
 function addDays(date: Date, days: number) {
@@ -362,7 +358,7 @@ function scoreCandidate(candidate: LinkedInTopicCandidate, benchmarks: GrowthPer
 
 export function buildLinkedInGrowthPlan({
   days = 7,
-  history = demoTopicHistory,
+  history = defaultTopicHistory,
   performanceBenchmarks = buildHistoricalPerformanceByDimension(),
   startDate = new Date("2026-06-24T00:00:00.000Z"),
 }: {
@@ -422,10 +418,10 @@ export function buildLinkedInGrowthPlan({
 }
 
 async function loadOrganizationTopicHistory(organizationId?: string): Promise<LinkedInTopicHistory[]> {
-  if (!organizationId) return demoTopicHistory;
+  if (!organizationId) return defaultTopicHistory;
 
   const supabase = createServiceSupabaseClient();
-  if (!supabase) return demoTopicHistory;
+  if (!supabase) return defaultTopicHistory;
 
   const since = new Date();
   since.setUTCDate(since.getUTCDate() - 60);
@@ -438,7 +434,7 @@ async function loadOrganizationTopicHistory(organizationId?: string): Promise<Li
     .order("published_at", { ascending: false })
     .limit(500);
 
-  if (error || !data) return demoTopicHistory;
+  if (error || !data) return defaultTopicHistory;
 
   const rows = data as Array<{ topic_key: string | null; published_at: string | null }>;
 
@@ -661,7 +657,7 @@ export function getGrowthEngineSnapshot() {
     repetitionWindowDays: 60,
     audiences: Object.values(personaLabels),
     regions: Object.values(regionLabels),
-    metrics: demoGrowthMetrics,
+    metrics: defaultGrowthMetrics,
     mixSummary,
     plannedPosts,
     topPatterns,

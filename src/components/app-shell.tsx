@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Route } from "next";
 import type { ComponentProps, ReactNode } from "react";
 import { BookOpen, BrainCircuit, CreditCard, FileOutput, FileSearch, FolderKanban, LayoutDashboard, LogOut, Search, ShieldCheck, Trophy } from "lucide-react";
-import { demoOrganization, type OrganizationProfile, getRecentProject } from "@/lib/platform";
+import { type OrganizationProfile, getRecentProject } from "@/lib/platform";
 import { cn } from "@/lib/utils";
 import { Badge, Logo } from "@/components/ui";
 
@@ -17,11 +17,11 @@ export function AppShell({
 }: {
   title: string;
   eyebrow: string;
-  organization?: OrganizationProfile;
+  organization: OrganizationProfile;
   workspaceHref?: LinkHref;
   children: ReactNode;
 }) {
-  const activeOrganization = organization ?? demoOrganization;
+  const activeOrganization = organization;
 
   return (
     <div className="app-shell-grid min-h-screen">

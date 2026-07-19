@@ -138,123 +138,6 @@ export function getKnowledgeDocumentTypeLabel(type: KnowledgeDocumentType) {
   return knowledgeTypeLabels[type];
 }
 
-const demoKnowledgeDocuments: KnowledgeDocumentRecord[] = [
-  {
-    id: "know_1",
-    organizationId: "org_demo",
-    name: "Healthcare Transformation Case Study",
-    documentType: "case_study",
-    title: "Healthcare Transformation Case Study",
-    description: "Regional healthcare data transformation delivery outcomes.",
-    sourceFile: "healthcare-case-study.pdf",
-    uploadDate: "2026-06-01T09:00:00.000Z",
-    processingStatus: "indexed",
-    confidenceScore: 94,
-    extractedText:
-      "Delivered a regional healthcare transformation programme across multiple trusts with measurable service improvements, ISO-accredited governance, and quantified patient data outcomes.",
-    chunkCount: 2,
-    timesReferenced: 12,
-    influencedBidsCount: 4,
-    averageWinProbabilityLift: 6,
-    generatedSectionsInfluenced: 9,
-    revenueImpact: 324000,
-    lastReferencedAt: "2026-06-24T10:00:00.000Z",
-    createdAt: "2026-06-01T09:00:00.000Z",
-  },
-  {
-    id: "know_2",
-    organizationId: "org_demo",
-    name: "ISO 27001 Certificate",
-    documentType: "certification",
-    title: "ISO 27001 Certificate",
-    description: "Current information security certification.",
-    sourceFile: "iso-27001-certificate.pdf",
-    uploadDate: "2026-05-12T08:00:00.000Z",
-    processingStatus: "indexed",
-    confidenceScore: 98,
-    extractedText: "ISO 27001 certification covering information security management and supplier assurance controls.",
-    chunkCount: 1,
-    timesReferenced: 18,
-    influencedBidsCount: 7,
-    averageWinProbabilityLift: 4,
-    generatedSectionsInfluenced: 14,
-    revenueImpact: 412000,
-    lastReferencedAt: "2026-06-24T08:00:00.000Z",
-    createdAt: "2026-05-12T08:00:00.000Z",
-  },
-  {
-    id: "know_3",
-    organizationId: "org_demo",
-    name: "Programme Delivery Methodology",
-    documentType: "method_statement",
-    title: "Programme Delivery Methodology",
-    description: "Core mobilisation, governance, RAID, QA, and reporting controls.",
-    sourceFile: "delivery-methodology.docx",
-    uploadDate: "2026-05-18T12:00:00.000Z",
-    processingStatus: "indexed",
-    confidenceScore: 90,
-    extractedText:
-      "Programme governance follows weekly RAID review, named workstream leads, stage-gated assurance, and benefits tracking through mobilisation, implementation, and transition.",
-    chunkCount: 2,
-    timesReferenced: 15,
-    influencedBidsCount: 5,
-    averageWinProbabilityLift: 5,
-    generatedSectionsInfluenced: 11,
-    revenueImpact: 278000,
-    lastReferencedAt: "2026-06-23T16:00:00.000Z",
-    createdAt: "2026-05-18T12:00:00.000Z",
-  },
-  {
-    id: "know_4",
-    organizationId: "org_demo",
-    name: "Managed Service Description",
-    documentType: "service_description",
-    title: "Managed Service Description",
-    description: "Service scope, SLAs, onboarding, and reporting model.",
-    sourceFile: "service-description.pdf",
-    uploadDate: "2026-05-22T10:00:00.000Z",
-    processingStatus: "indexed",
-    confidenceScore: 87,
-    extractedText:
-      "The managed service includes mobilisation, service desk onboarding, monthly performance reporting, named service manager ownership, and a structured continuous improvement plan.",
-    chunkCount: 2,
-    timesReferenced: 8,
-    influencedBidsCount: 3,
-    averageWinProbabilityLift: 3,
-    generatedSectionsInfluenced: 6,
-    revenueImpact: 146000,
-    lastReferencedAt: "2026-06-20T09:00:00.000Z",
-    createdAt: "2026-05-22T10:00:00.000Z",
-  },
-];
-
-const demoCoverageRecords: KnowledgeCoverageRecord[] = [
-  {
-    projectId: "proj_1",
-    coverageScore: 84,
-    missingEvidenceScore: 18,
-    missingCertificationScore: 8,
-    missingExperienceScore: 16,
-    coverageStrength: "strong",
-    missingKnowledgeAreas: ["Financial services testimonials"],
-    uploadRecommendations: ["Upload Financial Services Case Studies.", "Upload client testimonials for regulated programmes."],
-    supportingDocumentIds: ["know_1", "know_2", "know_3"],
-    updatedAt: "2026-06-24T10:00:00.000Z",
-  },
-  {
-    projectId: "proj_2",
-    coverageScore: 61,
-    missingEvidenceScore: 42,
-    missingCertificationScore: 28,
-    missingExperienceScore: 34,
-    coverageStrength: "moderate",
-    missingKnowledgeAreas: ["Cyber security policy", "Named transport case studies"],
-    uploadRecommendations: ["Upload a Cyber Security Policy.", "Upload Smart Mobility Case Studies."],
-    supportingDocumentIds: ["know_2", "know_4"],
-    updatedAt: "2026-06-23T12:00:00.000Z",
-  },
-];
-
 function createKnowledgeSupabaseClient() {
   if (!hasSupabaseEnv() || !env.supabaseServiceRoleKey) return null;
 
@@ -698,18 +581,7 @@ export async function retrieveRelevantKnowledge(input: {
 }) {
   const supabase = createKnowledgeSupabaseClient();
   if (!supabase || !input.organizationId) {
-    return demoKnowledgeDocuments.slice(0, input.topK ?? 4).map((item, index) => ({
-      knowledgeDocumentId: item.id,
-      title: item.title,
-      documentType: item.documentType,
-      chunkId: `demo_chunk_${index}`,
-      content: item.extractedText,
-      score: 0.82 - index * 0.08,
-      sourceLabel: `${item.title} (${knowledgeTypeLabels[item.documentType]})`,
-      sourceFile: item.sourceFile,
-      supportingEvidence: item.extractedText.slice(0, 280),
-      confidenceScore: item.confidenceScore,
-    } satisfies KnowledgeChunkHit));
+    return [] as KnowledgeChunkHit[];
   }
 
   const [documentsResponse, chunksResponse, embeddingsResponse, performanceResponse, queryEmbedding] = await Promise.all([
@@ -903,7 +775,7 @@ export async function syncKnowledgeCoverageForTender(input: {
   supportingDocumentIds?: string[];
 }): Promise<KnowledgeCoverageRecord | null> {
   const supabase = createKnowledgeSupabaseClient();
-  const documents = input.organizationId ? await loadKnowledgeDocuments(input.organizationId) : demoKnowledgeDocuments;
+  const documents = input.organizationId ? await loadKnowledgeDocuments(input.organizationId) : [];
   const coverage = buildCoverageRecordFromContext({
     projectId: input.projectId,
     requirements: input.requirements,
@@ -912,7 +784,7 @@ export async function syncKnowledgeCoverageForTender(input: {
   });
 
   if (!supabase || !input.organizationId) {
-    return { ...coverage, updatedAt: new Date().toISOString() };
+    return null;
   }
 
   await supabase.from("knowledge_coverage").upsert(
@@ -944,7 +816,7 @@ export async function syncKnowledgeCoverageForTender(input: {
 export async function loadKnowledgeCoverageForTender(projectId: string, organizationId?: string): Promise<KnowledgeCoverageRecord | null> {
   const supabase = createKnowledgeSupabaseClient();
   if (!supabase || !organizationId) {
-    return demoCoverageRecords.find((item) => item.projectId === projectId) ?? demoCoverageRecords[0] ?? null;
+    return null;
   }
 
   const { data } = await supabase
@@ -972,7 +844,7 @@ export async function loadKnowledgeCoverageForTender(projectId: string, organiza
 
 async function loadKnowledgeDocuments(organizationId: string) {
   const supabase = createKnowledgeSupabaseClient();
-  if (!supabase) return demoKnowledgeDocuments;
+  if (!supabase) return [];
 
   const [documentsResponse, performanceResponse, usageResponse, outcomesResponse] = await Promise.all([
     supabase
@@ -1055,10 +927,7 @@ export async function loadKnowledgeDocumentsForExport(input: {
   const limit = input.limit ?? 12;
 
   if (!input.organizationId) {
-    return demoKnowledgeDocuments
-      .filter((document) => (input.documentIds?.length ? input.documentIds.includes(document.id) : true))
-      .filter((document) => (input.documentTypes?.length ? input.documentTypes.includes(document.documentType) : true))
-      .slice(0, limit);
+    return [];
   }
 
   const documents = await loadKnowledgeDocuments(input.organizationId);
@@ -1262,7 +1131,7 @@ export async function getKnowledgeEngineSnapshot(organizationId?: string): Promi
   };
 
   if (!supabase || !organizationId) {
-    return buildSnapshot(demoKnowledgeDocuments, demoKnowledgeDocuments.reduce((sum, item) => sum + item.chunkCount, 0), demoCoverageRecords);
+    return buildSnapshot([], 0, []);
   }
 
   const [documents, chunksResponse, coverageResponse] = await Promise.all([

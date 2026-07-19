@@ -47,7 +47,7 @@ export default async function ExportsPage({
   }
 
   return (
-    <AppShell title="Exports" eyebrow="Submission" organization={dashboard?.organization || { id: "org_demo", companyName: "Demo", industry: "Demo", website: null, employeeCount: "1-10", certifications: [], location: "Demo" }}>
+    <AppShell title="Exports" eyebrow="Submission" organization={dashboard?.organization || { id: undefined, companyName: "Your Organization", industry: "", website: null, employeeCount: "1-10", certifications: [], location: "" }}>
       <div className="mb-5">
         <Card className="p-5">
           <p className="text-sm text-slate-300">

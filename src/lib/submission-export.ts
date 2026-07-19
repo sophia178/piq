@@ -28,7 +28,6 @@ import {
 } from "@/lib/knowledge";
 import {
   createServiceSupabaseClient,
-  demoProjects,
   getActiveOrganizationContext,
   trackAuditEvent,
   type OrganizationProfile,
@@ -200,7 +199,7 @@ const sectionLabels: Record<BidSectionKey, string> = {
   experience_response: "Experience Response",
 };
 
-const demoTemplates: ExportTemplateRecord[] = [
+const defaultTemplates: ExportTemplateRecord[] = [
   {
     id: "template_public_sector",
     name: "Public Sector Template",
@@ -254,7 +253,7 @@ const demoTemplates: ExportTemplateRecord[] = [
     isSystem: true,
   },
   {
-    id: "template_custom_demo",
+    id: "template_custom",
     name: "Custom Template",
     templateType: "custom",
     description: "Editable export template for organisation-specific thresholds and packaging preferences.",
@@ -336,7 +335,7 @@ async function ensureExportTemplates(organizationId: string) {
   if ((existing ?? []).length > 0) return;
 
   await supabase.from("export_templates").insert(
-    demoTemplates.map((item) => ({
+    defaultTemplates.map((item) => ({
       organization_id: organizationId,
       name: item.name,
       template_type: item.templateType,
@@ -429,7 +428,7 @@ export async function getOrganizationBrandingSettings(organizationId?: string, o
 
 export async function saveOrganizationBrandingSettings(input: z.infer<typeof BrandingSettingsSchema>) {
   const organization = await getActiveOrganizationContext();
-  const organizationId = input.organizationId ?? (organization.id === "org_demo" ? undefined : organization.id);
+  const organizationId = input.organizationId ?? organization.id;
   if (!organizationId) return { ...input, logoUrl: input.logoUrl || null };
 
   const supabase = createServiceSupabaseClient();
@@ -466,7 +465,7 @@ export async function saveOrganizationBrandingSettings(input: z.infer<typeof Bra
 
 export async function getExportTemplates(organizationId?: string) {
   const supabase = createServiceSupabaseClient();
-  if (!supabase || !organizationId) return demoTemplates;
+  if (!supabase || !organizationId) return defaultTemplates;
 
   await ensureExportTemplates(organizationId);
 
@@ -481,7 +480,7 @@ export async function getExportTemplates(organizationId?: string) {
 
 export async function saveExportTemplate(input: z.infer<typeof ExportTemplateUpsertSchema>) {
   const organization = await getActiveOrganizationContext();
-  const organizationId = input.organizationId ?? (organization.id === "org_demo" ? undefined : organization.id);
+  const organizationId = input.organizationId ?? organization.id;
   if (!organizationId) {
     return {
       id: input.templateId ?? randomUUID(),
@@ -545,7 +544,7 @@ async function getTemplateById(organizationId: string | undefined, templateId: s
   const selected = templateId ? templates.find((item) => item.id === templateId) : getTemplateForProject(projectName, templates);
   return {
     templates,
-    selectedTemplate: selected ?? templates[0] ?? demoTemplates[0],
+    selectedTemplate: selected ?? templates[0] ?? defaultTemplates[0],
   };
 }
 
@@ -1060,7 +1059,7 @@ export async function getExportHistory(projectId: string, organizationId?: strin
 
 async function buildExportArtifacts(input: z.infer<typeof SubmissionExportRequestSchema>) {
   const organization = await getActiveOrganizationContext();
-  const organizationId = input.organizationId ?? (organization.id === "org_demo" ? undefined : organization.id);
+  const organizationId = input.organizationId ?? organization.id;
   const workspace = await getBidWorkspaceSnapshot(input.projectId, organizationId);
   const review = await getBidReviewSnapshot(input.projectId, organizationId, workspace);
   const validation = await runSubmissionValidation({
@@ -1269,7 +1268,7 @@ export async function getSubmissionExportWorkspaceSnapshot(
   templateId?: string,
 ): Promise<SubmissionExportWorkspaceSnapshot> {
   const organization = await getActiveOrganizationContext();
-  const activeOrganizationId = organizationId ?? (organization.id === "org_demo" ? undefined : organization.id);
+  const activeOrganizationId = organizationId ?? organization.id;
   const workspace = await getBidWorkspaceSnapshot(projectId, activeOrganizationId);
   const review = await getBidReviewSnapshot(projectId, activeOrganizationId, workspace);
   const { templates, selectedTemplate } = await getTemplateById(activeOrganizationId, templateId, workspace.project.tenderName);
@@ -1306,7 +1305,7 @@ export async function getSubmissionExportWorkspaceSnapshot(
 
 export async function getSubmissionExportDashboardSnapshot(organizationId?: string): Promise<SubmissionExportDashboardSnapshot> {
   const organization = await getActiveOrganizationContext();
-  const activeOrganizationId = organizationId ?? (organization.id === "org_demo" ? undefined : organization.id);
+  const activeOrganizationId = organizationId ?? organization.id;
   const branding = await getOrganizationBrandingSettings(activeOrganizationId, organization);
   const templates = await getExportTemplates(activeOrganizationId);
   const supabase = createServiceSupabaseClient();
@@ -1320,13 +1319,7 @@ export async function getSubmissionExportDashboardSnapshot(organizationId?: stri
           .order("updated_at", { ascending: false })
           .limit(8)
       ).data ?? []
-    : demoProjects.map((item) => ({
-        id: item.id,
-        title: item.title,
-        issuing_body: item.issuingBody,
-        estimated_contract_value: item.estimatedContractValue,
-        tender_name: item.tenderName,
-      }));
+    : [];
 
   // Build simple project summaries without expensive calculations
   const projectSummaries: SubmissionExportProjectSummary[] = (projects as any[]).map((project) => {

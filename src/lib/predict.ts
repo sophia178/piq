@@ -4,8 +4,7 @@ import { z } from "zod";
 import type { BidReviewSnapshot } from "@/lib/bid-review";
 import type { BidWorkspaceSnapshot } from "@/lib/bid-workspace";
 import { env, hasOpenAIEnv } from "@/lib/env";
-import { demoOpportunities } from "@/lib/opportunities";
-import { createServiceSupabaseClient, demoOrganization, demoProjects, trackAuditEvent } from "@/lib/platform";
+import { createServiceSupabaseClient, trackAuditEvent } from "@/lib/platform";
 
 export type PredictBidRecommendation = "strong_bid" | "bid" | "borderline" | "no_bid";
 export type PredictionFactorCategory = "strength" | "weakness" | "opportunity" | "risk";
@@ -331,12 +330,12 @@ async function loadOrganizationSignals(organizationId?: string): Promise<Organiz
   const supabase = createServiceSupabaseClient();
   if (!supabase || !organizationId) {
     return {
-      id: demoOrganization.id,
-      companyName: demoOrganization.companyName,
-      industry: demoOrganization.industry,
-      location: demoOrganization.location,
-      certifications: demoOrganization.certifications,
-      activeBidLoad: 2,
+      id: undefined,
+      companyName: "Your Organization",
+      industry: "",
+      location: "",
+      certifications: [],
+      activeBidLoad: 0,
     };
   }
 
@@ -357,10 +356,10 @@ async function loadOrganizationSignals(organizationId?: string): Promise<Organiz
 
   return {
     id: organizationRow.data?.id as string | undefined,
-    companyName: (organizationRow.data?.company_name as string | null) ?? demoOrganization.companyName,
-    industry: (organizationRow.data?.industry as string | null) ?? demoOrganization.industry,
-    location: (organizationRow.data?.location as string | null) ?? demoOrganization.location,
-    certifications: Array.isArray(organizationRow.data?.certifications) ? (organizationRow.data?.certifications as string[]) : demoOrganization.certifications,
+    companyName: (organizationRow.data?.company_name as string | null) ?? "Your Organization",
+    industry: (organizationRow.data?.industry as string | null) ?? "",
+    location: (organizationRow.data?.location as string | null) ?? "",
+    certifications: Array.isArray(organizationRow.data?.certifications) ? (organizationRow.data?.certifications as string[]) : [],
     activeBidLoad: activeProjects.count ?? 0,
   };
 }
@@ -372,32 +371,25 @@ async function loadOpportunitySignals(input: {
 }): Promise<OpportunitySignals> {
   const supabase = createServiceSupabaseClient();
   if (!supabase || !input.organizationId) {
-    const demoOpportunity = input.opportunityId
-      ? demoOpportunities.find((opportunity) => opportunity.id === input.opportunityId) ?? null
-      : null;
-    const demoOpportunityIndex = demoOpportunity ? demoOpportunities.findIndex((item) => item.id === demoOpportunity.id) : -1;
-    const demoProject =
-      demoProjects.find((project) => project.id === input.projectId) ??
-      (demoOpportunityIndex >= 0 ? demoProjects[demoOpportunityIndex] ?? demoProjects[0] : null);
-    const title = demoOpportunity?.title ?? demoProject?.tenderName ?? "Tracked opportunity";
-    const description = demoOpportunity?.description ?? (demoProject ? `${demoProject.title} opportunity for ${demoProject.issuingBody}.` : "");
-    const sector = inferSectorFromOpportunity(demoOpportunity?.industryTags ?? [], title, description);
-    const estimatedContractValue = Number(demoOpportunity?.estimatedValue ?? demoProject?.estimatedContractValue ?? 0);
+    const title = "Tracked opportunity";
+    const description = "";
+    const sector = inferSectorFromOpportunity([], title, description);
+    const estimatedContractValue = 0;
     return {
-      opportunityId: input.opportunityId ?? demoOpportunity?.id ?? "opp_demo",
-      projectId: input.projectId ?? demoProject?.id ?? null,
+      opportunityId: input.opportunityId ?? undefined,
+      projectId: input.projectId ?? null,
       title,
       description,
-      buyerName: demoOpportunity?.buyerName ?? demoProject?.issuingBody ?? "Buyer",
-      submissionDeadline: demoOpportunity?.submissionDeadline ?? demoProject?.submissionDeadline ?? null,
+      buyerName: "Buyer",
+      submissionDeadline: null,
       estimatedContractValue,
-      expectedRevenue: Math.round(estimatedContractValue * 0.62),
-      expectedWinProbability: demoOpportunity?.id === "opp_1" ? 74 : demoOpportunity?.id === "opp_2" ? 66 : demoOpportunity?.id === "opp_3" ? 58 : demoProject ? 62 : 40,
-      bidEffortScore: demoOpportunity?.id === "opp_2" ? 63 : demoOpportunity ? 48 : demoProject ? 46 : 60,
-      locations: demoOpportunity?.locations ?? ["United Kingdom"],
-      industryTags: demoOpportunity?.industryTags ?? [sector],
+      expectedRevenue: 0,
+      expectedWinProbability: 40,
+      bidEffortScore: 60,
+      locations: [],
+      industryTags: [sector],
       sector,
-      serviceLine: inferServiceLine(demoOpportunity?.industryTags ?? [], sector, title),
+      serviceLine: inferServiceLine([], sector, title),
       tenderType: inferTenderType(`${title} ${description}`),
       frameworkName: inferFrameworkName(title, description),
     };
@@ -1808,9 +1800,7 @@ export async function getPredictEngineSnapshot(organizationId?: string): Promise
   const supabase = createServiceSupabaseClient();
 
   let summaries: OpportunityPredictionSummaryRecord[] = [];
-  if (!supabase || !organizationId) {
-    summaries = Array.from((await getOpportunityPredictionSummaryMap(undefined, demoOpportunities.map((item) => item.id))).values());
-  } else {
+  if (supabase && organizationId) {
     const { data: opportunities } = await supabase
       .from("opportunities")
       .select("id")

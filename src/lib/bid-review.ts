@@ -4,7 +4,7 @@ import { z } from "zod";
 import { env, hasOpenAIEnv } from "@/lib/env";
 import { syncOpportunityRevenueFromBidReview } from "@/lib/opportunities";
 import { syncPredictForProject } from "@/lib/predict";
-import { createServiceSupabaseClient, demoOrganization, demoProjects, trackAuditEvent } from "@/lib/platform";
+import { createServiceSupabaseClient, trackAuditEvent } from "@/lib/platform";
 import type { BidSectionKey, BidSectionRecord, BidWorkspaceSnapshot } from "@/lib/bid-workspace";
 
 export type ReviewSeverity = "critical" | "high" | "medium" | "low";
@@ -1271,37 +1271,15 @@ export async function applyBidReviewRecommendation(input: z.infer<typeof BidRevi
 
 export async function getBidReviewDashboardSnapshot(organizationId?: string): Promise<BidReviewDashboardSnapshot> {
   if (!organizationId) {
-    const projects = await Promise.all(
-      demoProjects.slice(0, 3).map(async (project) => {
-        const reviewSnapshot = await getBidReviewSnapshot(project.id);
-        const latestReview = reviewSnapshot.latestReview;
-        return {
-          projectId: project.id,
-          projectTitle: project.title,
-          issuingBody: project.issuingBody,
-          estimatedContractValue: project.estimatedContractValue,
-          readinessScore: latestReview?.submissionReadinessScore ?? 0,
-          submissionRecommendation: latestReview?.submissionRecommendation ?? "Needs Review",
-          overallBidScore: latestReview?.overallBidScore ?? 0,
-          criticalFindings: reviewSnapshot.reviewFindings.filter((item) => item.severity === "critical").length,
-          totalFindings: reviewSnapshot.reviewFindings.length,
-          improvementOpportunities: reviewSnapshot.reviewRecommendations.filter((item) => item.applyStatus !== "applied").length,
-          competitivePosition: latestReview?.competitivePosition ?? "",
-          topFindings: reviewSnapshot.reviewFindings.slice(0, 3),
-          updatedAt: latestReview?.createdAt ?? null,
-        } satisfies BidReviewDashboardProject;
-      }),
-    );
-
     return {
       metrics: {
-        projectsReviewed: projects.length,
-        averageOverallBidScore: Math.round(average(projects.map((item) => item.overallBidScore))),
-        averageReadinessScore: Math.round(average(projects.map((item) => item.readinessScore))),
-        criticalFindings: projects.reduce((sum, item) => sum + item.criticalFindings, 0),
-        improvementOpportunities: projects.reduce((sum, item) => sum + item.improvementOpportunities, 0),
+        projectsReviewed: 0,
+        averageOverallBidScore: 0,
+        averageReadinessScore: 0,
+        criticalFindings: 0,
+        improvementOpportunities: 0,
       },
-      projects,
+      projects: [],
     };
   }
 

@@ -94,7 +94,7 @@ export function SubmissionExportBoard({
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          organizationId: dashboard.organization.id === "org_demo" ? undefined : dashboard.organization.id,
+          organizationId: dashboard.organization.id,
           ...branding,
         }),
       });
@@ -118,7 +118,7 @@ export function SubmissionExportBoard({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          organizationId: dashboard.organization.id === "org_demo" ? undefined : dashboard.organization.id,
+          organizationId: dashboard.organization.id,
           templateId: selectedTemplate.templateType === "custom" ? selectedTemplate.id : undefined,
           name: templateForm.name,
           templateType: templateForm.templateType,
@@ -148,7 +148,7 @@ export function SubmissionExportBoard({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          organizationId: dashboard.organization.id === "org_demo" ? undefined : dashboard.organization.id,
+          organizationId: dashboard.organization.id,
           projectId: selectedProject.projectId,
           templateId: selectedTemplate.id,
         }),
@@ -172,7 +172,7 @@ export function SubmissionExportBoard({
 
       try {
         await downloadExport({
-          organizationId: dashboard.organization.id === "org_demo" ? undefined : dashboard.organization.id,
+          organizationId: dashboard.organization.id,
           projectId: selectedProject.projectId,
           exportType,
           templateId: selectedTemplate.id,

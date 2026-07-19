@@ -16,16 +16,12 @@ import { syncOpportunityRevenueFromBidQuality } from "@/lib/opportunities";
 import {
   buildComplianceSnapshot,
   createServiceSupabaseClient,
-  demoCompliance,
-  demoOrganization,
-  demoProjects,
-  demoRequirements,
-  demoResponses,
   runTenderAnalysis,
   trackAuditEvent,
   type ComplianceSnapshot,
   type ProjectSummary,
   type RequirementItem,
+  type OrganizationProfile,
 } from "@/lib/platform";
 
 export type BidSectionKey =
@@ -240,7 +236,7 @@ function buildSourceText(opportunity: OpportunityRecord) {
   ].join("\n");
 }
 
-function classifyMissingInformation(requirement: RequirementItem, organization: typeof demoOrganization) {
+function classifyMissingInformation(requirement: RequirementItem, organization: OrganizationProfile) {
   const text = `${requirement.heading} ${requirement.requirement}`.toLowerCase();
   const certifications = organization.certifications.map((item) => item.toLowerCase());
 
@@ -281,7 +277,7 @@ function classifyMissingInformation(requirement: RequirementItem, organization: 
   } as const;
 }
 
-function buildBidRequirements(requirements: RequirementItem[], organization: typeof demoOrganization): BidRequirementRecord[] {
+function buildBidRequirements(requirements: RequirementItem[], organization: OrganizationProfile): BidRequirementRecord[] {
   return requirements.map((item, index) => {
     const classification = classifyMissingInformation(item, organization);
     return {
@@ -376,7 +372,7 @@ function sectionFallbackContent(params: {
   title: string;
   opportunity: OpportunityRecord;
   requirements: RequirementItem[];
-  organization: typeof demoOrganization;
+  organization: OrganizationProfile;
 }) {
   const mandatory = params.requirements.filter((item) => item.mandatory).slice(0, 4);
 
@@ -430,7 +426,7 @@ async function generateSectionDraft(params: {
   title: string;
   opportunity: OpportunityRecord;
   requirements: RequirementItem[];
-  organization: typeof demoOrganization;
+  organization: OrganizationProfile;
   bidRequirements: BidRequirementRecord[];
 }) {
   const knowledgeHits = await retrieveRelevantKnowledge({
@@ -568,7 +564,15 @@ function normalizeProjectSummary(project: any): ProjectSummary {
 
 async function loadOrganizationProfile(organizationId: string) {
   const supabase = createServiceSupabaseClient();
-  if (!supabase) return demoOrganization;
+  if (!supabase) return {
+    id: organizationId,
+    companyName: "",
+    industry: "",
+    website: "",
+    employeeCount: "",
+    certifications: [],
+    location: "",
+  } as OrganizationProfile;
 
   const { data } = await supabase
     .from("organizations")
@@ -576,16 +580,24 @@ async function loadOrganizationProfile(organizationId: string) {
     .eq("id", organizationId)
     .maybeSingle();
 
-  if (!data) return demoOrganization;
+  if (!data) return {
+    id: organizationId,
+    companyName: "",
+    industry: "",
+    website: "",
+    employeeCount: "",
+    certifications: [],
+    location: "",
+  } as OrganizationProfile;
 
   return {
     id: data.id as string,
     companyName: data.company_name as string,
-    industry: data.industry as string,
-    website: (data.website as string | null) ?? demoOrganization.website,
-    employeeCount: (data.employee_count as string | null) ?? demoOrganization.employeeCount,
+    industry: (data.industry as string | null) ?? "",
+    website: (data.website as string | null) ?? "",
+    employeeCount: (data.employee_count as string | null) ?? "",
     certifications: (data.certifications ?? []) as string[],
-    location: (data.location as string | null) ?? demoOrganization.location,
+    location: (data.location as string | null) ?? "",
   };
 }
 
@@ -1277,64 +1289,85 @@ export async function recalculateBidWorkspaceScores(projectId: string, organizat
 export async function getBidWorkspaceSnapshot(projectId: string, organizationId?: string): Promise<BidWorkspaceSnapshot> {
   const supabase = createServiceSupabaseClient();
   if (!supabase || !organizationId) {
+    const emptyProject: ProjectSummary = {
+      id: projectId,
+      title: "Untitled Project",
+      tenderName: "Untitled Project",
+      issuingBody: "Unknown Buyer",
+      submissionDeadline: null,
+      estimatedContractValue: undefined,
+      status: "draft",
+      readinessScore: 0,
+    };
+    const emptyRequirements: RequirementItem[] = [];
+    const emptyCompliance: ComplianceSnapshot = buildComplianceSnapshot([]);
+    const emptyOrganization: OrganizationProfile = {
+      id: organizationId || "",
+      companyName: "",
+      industry: "",
+      website: "",
+      employeeCount: "",
+      certifications: [],
+      location: "",
+    };
+    const emptyOpportunity: OpportunityRecord = {
+      id: "opp_empty",
+      sourceKey: "contracts_finder",
+      sourceNames: ["Imported Workspace"],
+      externalId: "opp_empty",
+      dedupeKey: "opp_empty",
+      title: "Untitled Opportunity",
+      description: "",
+      buyerName: "Unknown Buyer",
+      locations: [],
+      industryTags: [],
+      cpvCodes: [],
+      currency: "GBP",
+      estimatedValue: null,
+      publishedAt: null,
+      submissionDeadline: null,
+      opportunityStatus: "active",
+    };
+
     return {
       organizationId,
-      project: demoProjects[0],
+      project: emptyProject,
       knowledgeCoverage: await loadKnowledgeCoverageForTender(projectId, organizationId),
-      requirements: demoRequirements,
+      requirements: emptyRequirements,
       compliance: {
-        ...demoCompliance,
-        completionScore: 78,
-        readinessState: "ready_for_review",
-        missingDocuments: ["Professional indemnity insurance schedule"],
+        ...emptyCompliance,
+        completionScore: 0,
+        readinessState: "not_started",
+        missingDocuments: [],
         missingCertifications: [],
-        missingEvidence: ["Quantified transformation case study for healthcare buyer"],
-        missingReferences: ["Named client reference for comparable programme"],
+        missingEvidence: [],
+        missingReferences: [],
       },
-      bidRequirements: buildBidRequirements(demoRequirements, demoOrganization),
+      bidRequirements: buildBidRequirements(emptyRequirements, emptyOrganization),
       bidSections: sectionCatalog.map((section, index) => ({
         id: `section_${section.key}`,
         sectionKey: section.key,
         title: section.title,
-        status: index < 3 ? "ready_for_review" : "in_progress",
-        completionPercentage: index < 2 ? 85 : index < 5 ? 60 : 40,
+        status: "not_started" as const,
+        completionPercentage: 0,
         sectionOrder: section.order,
         guidance: section.guidance,
-        latestDraftId: `draft_${section.key}`,
-        latestWorkspaceDocumentId: `doc_${section.key}`,
-        lastGeneratedAt: new Date().toISOString(),
-        content:
-          demoResponses.find((item) => item.section.toLowerCase().includes(section.title.split(" ")[0].toLowerCase()))?.content ??
-          sectionFallbackContent({
-            sectionKey: section.key,
-            title: section.title,
-            opportunity: {
-              id: "opp_demo",
-              sourceKey: "contracts_finder",
-              sourceNames: ["Imported Workspace"],
-              externalId: "opp_demo",
-              dedupeKey: "opp_demo",
-              title: demoProjects[0].tenderName,
-              description: demoResponses.map((item) => item.content).join("\n"),
-              buyerName: demoProjects[0].issuingBody,
-              locations: ["United Kingdom"],
-              industryTags: ["consulting"],
-              cpvCodes: [],
-              currency: "GBP",
-              estimatedValue: demoProjects[0].estimatedContractValue ?? null,
-              publishedAt: null,
-              submissionDeadline: demoProjects[0].submissionDeadline,
-              opportunityStatus: "active",
-            },
-            requirements: demoRequirements,
-            organization: demoOrganization,
-          }),
-        confidence: demoResponses[0]?.confidence ?? 80,
-        sourceReferences: ["Organization profile", "Requirement checklist"],
-        supportingEvidence: demoResponses[0]?.supportingEvidence ?? ["Quantified case study evidence", "Current certification evidence"],
+        latestDraftId: null,
+        latestWorkspaceDocumentId: null,
+        lastGeneratedAt: null,
+        content: sectionFallbackContent({
+          sectionKey: section.key,
+          title: section.title,
+          opportunity: emptyOpportunity,
+          requirements: emptyRequirements,
+          organization: emptyOrganization,
+        }),
+        confidence: null,
+        sourceReferences: [],
+        supportingEvidence: [],
       })),
-      bidTasks: buildBidTasks(buildBidRequirements(demoRequirements, demoOrganization), buildTimeline(demoProjects[0].submissionDeadline)),
-      bidTimeline: buildTimeline(demoProjects[0].submissionDeadline),
+      bidTasks: buildBidTasks(buildBidRequirements(emptyRequirements, emptyOrganization), buildTimeline(null)),
+      bidTimeline: buildTimeline(null),
     };
   }
 
@@ -1495,7 +1528,7 @@ export async function getBidWorkspaceSnapshot(projectId: string, organizationId?
         checklist: (complianceResponse.data.checklist ?? []) as ComplianceSnapshot["checklist"],
       }
     : {
-        ...demoCompliance,
+        ...buildComplianceSnapshot([]),
         completionScore: 0,
         readinessState: "not_started",
         missingDocuments: [],

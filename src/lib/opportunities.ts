@@ -2,7 +2,7 @@ import { createHash, randomUUID } from "node:crypto";
 import OpenAI from "openai";
 import { z } from "zod";
 import { env, hasOpenAIEnv } from "@/lib/env";
-import { createServiceSupabaseClient, demoOrganization, demoProjects, trackAuditEvent } from "@/lib/platform";
+import { createServiceSupabaseClient, trackAuditEvent, type OrganizationProfile } from "@/lib/platform";
 import {
   getOpportunityPredictionSummaryMap,
   recordPredictionOutcome,
@@ -304,194 +304,7 @@ const sourceCatalog: Array<{
   },
 ];
 
-const demoAlerts: OpportunityAlertRule[] = [
-  {
-    id: "alert_1",
-    name: "Digital Transformation UK",
-    keywords: ["digital transformation", "cloud", "data platform"],
-    industries: ["IT consulting", "software", "healthcare"],
-    locations: ["United Kingdom", "England", "London"],
-    minimumContractValue: 100000,
-    maximumContractValue: 5000000,
-  },
-  {
-    id: "alert_2",
-    name: "Construction Frameworks",
-    keywords: ["framework", "construction", "infrastructure"],
-    industries: ["construction", "civil engineering"],
-    locations: ["United Kingdom", "Scotland", "Wales"],
-    minimumContractValue: 250000,
-    maximumContractValue: 25000000,
-  },
-];
 
-export const demoOpportunities: OpportunityRecord[] = [
-  {
-    id: "opp_1",
-    sourceKey: "contracts_finder",
-    sourceNames: ["UK Contracts Finder"],
-    externalId: "cf-1001",
-    dedupeKey: "dedupe-1",
-    title: "NHS Regional Data Platform Modernisation",
-    description: "Design, implementation, and managed support for a regional healthcare data platform including migration, governance, and analytics.",
-    buyerName: "NHS Shared Business Services",
-    buyerIdentifier: "nhs-sbs",
-    sourceUrl: "https://www.contractsfinder.service.gov.uk/",
-    sourceNoticeNumber: "1001-2026",
-    locations: ["England", "United Kingdom", "London"],
-    industryTags: ["IT consulting", "healthcare", "data"],
-    cpvCodes: ["72000000", "72222300"],
-    currency: "GBP",
-    minimumValue: 900000,
-    maximumValue: 2400000,
-    estimatedValue: 1800000,
-    publishedAt: "2026-06-22T09:00:00.000Z",
-    submissionDeadline: "2026-07-14T12:00:00.000Z",
-    opportunityStatus: "active",
-    aiSummary: "Strong fit for digital transformation, analytics, and healthcare delivery credentials.",
-  },
-  {
-    id: "opp_2",
-    sourceKey: "find_a_tender",
-    sourceNames: ["Find a Tender"],
-    externalId: "fts-2211",
-    dedupeKey: "dedupe-2",
-    title: "National Construction Framework for Decarbonisation Works",
-    description: "Framework covering retrofit, energy efficiency upgrades, and associated compliance management across public estates.",
-    buyerName: "Crown Commercial Service",
-    buyerIdentifier: "ccs",
-    sourceUrl: "https://www.find-tender.service.gov.uk/",
-    sourceNoticeNumber: "2211-2026",
-    locations: ["United Kingdom", "Scotland", "Wales"],
-    industryTags: ["construction", "decarbonisation", "framework"],
-    cpvCodes: ["45000000", "45321000"],
-    currency: "GBP",
-    minimumValue: 3000000,
-    maximumValue: 18000000,
-    estimatedValue: 12000000,
-    publishedAt: "2026-06-23T08:30:00.000Z",
-    submissionDeadline: "2026-08-01T17:00:00.000Z",
-    opportunityStatus: "active",
-    aiSummary: "High revenue potential for firms with framework and public estate delivery evidence.",
-  },
-  {
-    id: "opp_3",
-    sourceKey: "sam_gov",
-    sourceNames: ["SAM.gov"],
-    externalId: "sam-4408",
-    dedupeKey: "dedupe-3",
-    title: "Federal Cloud Modernization and AI Readiness Services",
-    description: "Professional services contract for cloud operating model design, security hardening, data readiness, and AI adoption planning.",
-    buyerName: "Department of the Treasury",
-    buyerIdentifier: "us-treasury",
-    sourceUrl: "https://sam.gov",
-    sourceNoticeNumber: "2032L2-26-X-0001",
-    locations: ["United States", "Washington, DC"],
-    industryTags: ["IT consulting", "cloud", "AI"],
-    cpvCodes: ["518210"],
-    currency: "USD",
-    minimumValue: 500000,
-    maximumValue: 3500000,
-    estimatedValue: 2500000,
-    publishedAt: "2026-06-20T14:00:00.000Z",
-    submissionDeadline: "2026-07-10T17:00:00.000Z",
-    opportunityStatus: "active",
-    aiSummary: "Good fit for consultancies with regulated sector security and AI transformation references.",
-  },
-];
-
-const demoMatches: OpportunityMatchRecord[] = [
-  {
-    id: "match_1",
-    opportunityId: "opp_1",
-    alertId: "alert_1",
-    relevanceScore: 92,
-    winProbability: 74,
-    revenuePotential: 1332000,
-    combinedScore: 86,
-    rationale: "Healthcare, digital transformation, and data platform keywords align strongly with the alert profile.",
-    matchStatus: "alerted",
-    importedProjectId: null,
-  },
-  {
-    id: "match_2",
-    opportunityId: "opp_2",
-    alertId: "alert_2",
-    relevanceScore: 90,
-    winProbability: 68,
-    revenuePotential: 8160000,
-    combinedScore: 84,
-    rationale: "Framework, construction, and decarbonisation signals create a strong strategic fit.",
-    matchStatus: "saved",
-    importedProjectId: null,
-  },
-  {
-    id: "match_3",
-    opportunityId: "opp_3",
-    alertId: "alert_1",
-    relevanceScore: 81,
-    winProbability: 58,
-    revenuePotential: 1450000,
-    combinedScore: 73,
-    rationale: "Strong services fit, but geography and buyer context reduce overall win probability.",
-    matchStatus: "new",
-    importedProjectId: null,
-  },
-];
-
-const demoBidOutcomes: BidOutcomeRecord[] = [
-  {
-    id: "outcome_1",
-    projectId: "proj_1",
-    opportunityId: "opp_1",
-    title: "NHS Regional Data Platform Modernisation",
-    clientName: "NHS Shared Business Services",
-    contractValue: 1800000,
-    outcome: "won",
-    competitorCount: 4,
-    sector: "healthcare",
-    tenderType: "framework",
-    outcomeSummary: "Won on healthcare delivery credibility, strong security evidence, and clear implementation governance.",
-    decisionFactors: ["healthcare case studies", "ISO 27001 evidence", "clear mobilisation plan"],
-    submittedAt: "2026-06-19T12:00:00.000Z",
-    decidedAt: "2026-06-24T10:00:00.000Z",
-    createdAt: "2026-06-24T10:00:00.000Z",
-  },
-  {
-    id: "outcome_2",
-    projectId: "proj_2",
-    opportunityId: "opp_2",
-    title: "National Construction Framework for Decarbonisation Works",
-    clientName: "Crown Commercial Service",
-    contractValue: 12000000,
-    outcome: "lost",
-    competitorCount: 9,
-    sector: "construction",
-    tenderType: "framework",
-    outcomeSummary: "Lost in a crowded framework competition where incumbent scale and wider regional coverage outweighed the bid.",
-    decisionFactors: ["high competitor count", "incumbent supplier advantage", "regional delivery coverage"],
-    submittedAt: "2026-06-20T15:00:00.000Z",
-    decidedAt: "2026-06-25T11:30:00.000Z",
-    createdAt: "2026-06-25T11:30:00.000Z",
-  },
-  {
-    id: "outcome_3",
-    projectId: "proj_3",
-    opportunityId: "opp_3",
-    title: "Federal Cloud Modernization and AI Readiness Services",
-    clientName: "Department of the Treasury",
-    contractValue: 2500000,
-    outcome: "submitted",
-    competitorCount: 6,
-    sector: "technology",
-    tenderType: "rfp",
-    outcomeSummary: "Submission completed and awaiting buyer decision.",
-    decisionFactors: ["federal security experience", "AI transformation references"],
-    submittedAt: "2026-06-22T18:00:00.000Z",
-    decidedAt: null,
-    createdAt: "2026-06-22T18:00:00.000Z",
-  },
-];
 
 const opportunityPipelineStageOrder: OpportunityPipelineStage[] = ["opportunity", "imported", "bid_created", "submitted", "won", "lost"];
 
@@ -803,7 +616,7 @@ async function fetchSourceOpportunities(lookbackHours: number) {
     return deduplicateOpportunityBatch(combined);
   }
 
-  return demoOpportunities;
+  return [];
 }
 
 function deduplicateOpportunityBatch(opportunities: OpportunityRecord[]) {
@@ -1102,6 +915,7 @@ function extractJsonObject(text: string) {
 }
 
 async function scoreOpportunityWithAI(
+  organization: OrganizationProfile,
   opportunity: OpportunityRecord,
   alert: OpportunityAlertRule,
   learningContext?: OutcomeLearningContext,
@@ -1122,7 +936,7 @@ async function scoreOpportunityWithAI(
         {
           role: "user",
           content: JSON.stringify({
-            organization: demoOrganization,
+            organization,
             alert,
             opportunity,
             outcomeLearningContext: learningContext ?? null,
@@ -1146,6 +960,7 @@ async function scoreOpportunityWithAI(
 }
 
 async function recommendOpportunityWithAI(params: {
+  organization: OrganizationProfile;
   opportunity: OpportunityRecord;
   match?: OpportunityMatchRecord;
   roi: OpportunityRoiScoreRecord;
@@ -1166,7 +981,7 @@ async function recommendOpportunityWithAI(params: {
         {
           role: "user",
           content: JSON.stringify({
-            organization: demoOrganization,
+            organization: params.organization,
             opportunity: params.opportunity,
             match: params.match ?? null,
             roi: params.roi,
@@ -1451,7 +1266,7 @@ async function ensureOpportunityPipeline(organizationId: string, opportunityId: 
 async function loadBidOutcomes(organizationId?: string) {
   const supabase = createServiceSupabaseClient();
   if (!supabase || !organizationId) {
-    return demoBidOutcomes;
+    return [];
   }
 
   const { data, error } = await supabase
@@ -1650,7 +1465,7 @@ async function seedOpportunitySources() {
 
 async function loadAlertRules(organizationId?: string) {
   const supabase = createServiceSupabaseClient();
-  if (!supabase || !organizationId) return demoAlerts;
+  if (!supabase || !organizationId) return [];
 
   const { data, error } = await supabase
     .from("opportunity_alerts")
@@ -1838,13 +1653,42 @@ export async function runOpportunityScan({
   const revenueScores: OpportunityRoiScoreRecord[] = [];
   const priorities: OpportunityPriorityRecord[] = [];
 
+  // Load organization profile
+  let organization: OrganizationProfile = {
+    id: organizationId || "",
+    companyName: "",
+    industry: "",
+    website: "",
+    employeeCount: "",
+    certifications: [],
+    location: "",
+  };
+  if (shouldPersist && organizationId) {
+    const { data: orgData } = await supabase!
+      .from("organizations")
+      .select("id, company_name, industry, website, employee_count, certifications, location")
+      .eq("id", organizationId)
+      .maybeSingle();
+    if (orgData) {
+      organization = {
+        id: orgData.id as string,
+        companyName: orgData.company_name as string,
+        industry: (orgData.industry as string | null) ?? "",
+        website: (orgData.website as string | null) ?? "",
+        employeeCount: (orgData.employee_count as string | null) ?? "",
+        certifications: (orgData.certifications ?? []) as string[],
+        location: (orgData.location as string | null) ?? "",
+      };
+    }
+  }
+
   for (const opportunity of normalizedOpportunities) {
     const persistedOpportunityId = shouldPersist && organizationId ? await upsertOpportunity(organizationId, opportunity) : opportunity.id;
     const persistedOpportunity = { ...opportunity, id: persistedOpportunityId };
     let bestMatchForOpportunity: OpportunityMatchRecord | undefined;
 
     for (const alert of alerts) {
-      const scores = await scoreOpportunityWithAI(opportunity, alert, learningContext);
+      const scores = await scoreOpportunityWithAI(organization, opportunity, alert, learningContext);
       if (scores.relevanceScore < 45) continue;
 
       const matchId =
@@ -1879,6 +1723,7 @@ export async function runOpportunityScan({
     let roi = buildRevenueScoreHeuristics(persistedOpportunity, bestMatchForOpportunity, learningContext);
     let priority = buildOpportunityPriority(roi);
     roi = await recommendOpportunityWithAI({
+      organization,
       opportunity: persistedOpportunity,
       match: bestMatchForOpportunity,
       roi,
@@ -2117,7 +1962,7 @@ export async function updateOpportunityPipelineStage(input: z.infer<typeof Oppor
 export async function importOpportunityToWorkspace(input: z.infer<typeof OpportunityImportSchema>) {
   const supabase = createServiceSupabaseClient();
   if (!supabase || !input.organizationId) {
-    return { projectId: demoProjects[0].id, projectTitle: demoProjects[0].title };
+    throw new Error("Organization context is required to import an opportunity.");
   }
 
   if (input.matchId) {
@@ -2341,79 +2186,14 @@ export async function getOpportunityDiscoverySnapshot(organizationId?: string): 
   };
 
   if (!supabase || !organizationId) {
-    const demoLearningContext = buildOutcomeLearningContext(demoBidOutcomes);
-    const demoRoiScores = demoOpportunities.map((opportunity) =>
-      buildRevenueScoreHeuristics(
-        opportunity,
-        demoMatches
-          .filter((match) => match.opportunityId === opportunity.id)
-          .sort((left, right) => right.combinedScore - left.combinedScore)[0],
-        demoLearningContext,
-      ),
-    );
-    const demoPriorities = demoRoiScores.map((roi) => buildOpportunityPriority(roi));
-    const demoPipelines: OpportunityPipelineRecord[] = [
-      {
-        opportunityId: "opp_1",
-        currentStage: "bid_created",
-        projectId: "proj_1",
-        importedAt: "2026-06-23T10:00:00.000Z",
-        bidCreatedAt: "2026-06-23T10:05:00.000Z",
-        submittedAt: null,
-        wonAt: null,
-        lostAt: null,
-        contractValueWon: null,
-        stageHistory: [
-          { stage: "opportunity", at: "2026-06-22T09:00:00.000Z" },
-          { stage: "imported", at: "2026-06-23T10:00:00.000Z" },
-          { stage: "bid_created", at: "2026-06-23T10:05:00.000Z" },
-        ],
-      },
-      {
-        opportunityId: "opp_2",
-        currentStage: "submitted",
-        projectId: "proj_2",
-        importedAt: "2026-06-23T09:00:00.000Z",
-        bidCreatedAt: "2026-06-23T09:10:00.000Z",
-        submittedAt: "2026-06-24T14:00:00.000Z",
-        wonAt: null,
-        lostAt: null,
-        contractValueWon: null,
-        stageHistory: [
-          { stage: "opportunity", at: "2026-06-23T08:30:00.000Z" },
-          { stage: "imported", at: "2026-06-23T09:00:00.000Z" },
-          { stage: "bid_created", at: "2026-06-23T09:10:00.000Z" },
-          { stage: "submitted", at: "2026-06-24T14:00:00.000Z" },
-        ],
-      },
-      {
-        opportunityId: "opp_3",
-        currentStage: "won",
-        projectId: "proj_3",
-        importedAt: "2026-06-21T08:00:00.000Z",
-        bidCreatedAt: "2026-06-21T08:15:00.000Z",
-        submittedAt: "2026-06-22T18:00:00.000Z",
-        wonAt: "2026-06-24T11:30:00.000Z",
-        lostAt: null,
-        contractValueWon: 2500000,
-        stageHistory: [
-          { stage: "opportunity", at: "2026-06-20T14:00:00.000Z" },
-          { stage: "imported", at: "2026-06-21T08:00:00.000Z" },
-          { stage: "bid_created", at: "2026-06-21T08:15:00.000Z" },
-          { stage: "submitted", at: "2026-06-22T18:00:00.000Z" },
-          { stage: "won", at: "2026-06-24T11:30:00.000Z" },
-        ],
-      },
-    ];
-
     return await buildSnapshotFromRecords({
-      alerts: demoAlerts,
-      opportunities: demoOpportunities,
-      matches: demoMatches,
-      roiScores: demoRoiScores,
-      priorities: demoPriorities,
-      pipelines: demoPipelines,
-      scansLast7Days: 6,
+      alerts: [],
+      opportunities: [],
+      matches: [],
+      roiScores: [],
+      priorities: [],
+      pipelines: [],
+      scansLast7Days: 0,
     });
   }
 
@@ -2649,7 +2429,15 @@ async function generateOutcomeInsights(
         {
           role: "user",
           content: JSON.stringify({
-            organization: demoOrganization,
+            organization: {
+              id: "",
+              companyName: "",
+              industry: "",
+              website: "",
+              employeeCount: "",
+              certifications: [],
+              location: "",
+            } satisfies OrganizationProfile,
             outcomes,
             sectorPatterns,
             clientPatterns,
@@ -2675,16 +2463,7 @@ async function generateOutcomeInsights(
 async function loadTrackableBids(organizationId?: string): Promise<TrackableBidRecord[]> {
   const supabase = createServiceSupabaseClient();
   if (!supabase || !organizationId) {
-    return demoOpportunities.map((opportunity, index) => ({
-      projectId: demoProjects[index]?.id ?? null,
-      opportunityId: opportunity.id,
-      title: opportunity.title,
-      clientName: opportunity.buyerName,
-      currentStage: index === 0 ? "bid_created" : index === 1 ? "submitted" : "won",
-      contractValue: getEstimatedContractValue(opportunity),
-      sector: inferSector(opportunity),
-      tenderType: inferTenderType(opportunity),
-    }));
+    return [];
   }
 
   const [pipelineResponse, opportunitiesResponse] = await Promise.all([
@@ -2819,7 +2598,7 @@ async function refreshRecommendationEngineFromOutcomes(organizationId: string) {
   const supabase = createServiceSupabaseClient();
   if (!supabase) return;
 
-  const [opportunitiesResponse, matchesResponse] = await Promise.all([
+  const [opportunitiesResponse, matchesResponse, orgResponse] = await Promise.all([
     supabase
       .from("opportunities")
       .select("id, source_key, source_names, external_id, dedupe_key, title, description, buyer_name, buyer_identifier, source_url, source_notice_number, locations, industry_tags, cpv_codes, currency, minimum_value, maximum_value, estimated_value, published_at, submission_deadline, opportunity_status, ai_summary")
@@ -2828,6 +2607,11 @@ async function refreshRecommendationEngineFromOutcomes(organizationId: string) {
       .from("opportunity_matches")
       .select("id, opportunity_id, alert_id, relevance_score, win_probability, revenue_potential, combined_score, rationale, match_status, imported_project_id")
       .eq("organization_id", organizationId),
+    supabase
+      .from("organizations")
+      .select("id, company_name, industry, website, employee_count, certifications, location")
+      .eq("id", organizationId)
+      .maybeSingle(),
   ]);
 
   if (opportunitiesResponse.error || matchesResponse.error) return;
@@ -2870,6 +2654,28 @@ async function refreshRecommendationEngineFromOutcomes(organizationId: string) {
     importedProjectId: (row.imported_project_id as string | null) ?? null,
   }));
 
+  // Load organization profile
+  let organization: OrganizationProfile = {
+    id: organizationId,
+    companyName: "",
+    industry: "",
+    website: "",
+    employeeCount: "",
+    certifications: [],
+    location: "",
+  };
+  if (orgResponse.data) {
+    organization = {
+      id: orgResponse.data.id as string,
+      companyName: orgResponse.data.company_name as string,
+      industry: (orgResponse.data.industry as string | null) ?? "",
+      website: (orgResponse.data.website as string | null) ?? "",
+      employeeCount: (orgResponse.data.employee_count as string | null) ?? "",
+      certifications: (orgResponse.data.certifications ?? []) as string[],
+      location: (orgResponse.data.location as string | null) ?? "",
+    };
+  }
+
   const learningContext = buildOutcomeLearningContext(await loadBidOutcomes(organizationId));
   for (const opportunity of opportunities) {
     const bestMatch = matches
@@ -2878,6 +2684,7 @@ async function refreshRecommendationEngineFromOutcomes(organizationId: string) {
     let roi = buildRevenueScoreHeuristics(opportunity, bestMatch, learningContext);
     let priority = buildOpportunityPriority(roi);
     roi = await recommendOpportunityWithAI({
+      organization,
       opportunity,
       match: bestMatch,
       roi,

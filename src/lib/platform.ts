@@ -20,7 +20,7 @@ export interface ProjectSummary {
   title: string;
   tenderName: string;
   issuingBody: string;
-  submissionDeadline: string;
+  submissionDeadline: string | null;
   estimatedContractValue?: number;
   status: ProjectStatus;
   readinessScore: number;
@@ -142,122 +142,7 @@ export const planCatalog: Array<{ tier: PlanTier; price: string; monthlyTenderLi
   { tier: "agency", price: "799", monthlyTenderLimit: null, priceId: env.stripeAgencyPriceId },
 ];
 
-export const demoOrganization: OrganizationProfile = {
-  id: "org_demo",
-  companyName: "Northstar Infrastructure Ltd",
-  industry: "Construction Technology",
-  website: "https://northstar.example.com",
-  employeeCount: "201-500",
-  certifications: ["ISO 9001", "ISO 27001", "Cyber Essentials Plus"],
-  location: "London, UK",
-};
 
-export const demoProjects: ProjectSummary[] = [
-  {
-    id: "proj_1",
-    title: "NHS Digital Transformation Framework",
-    tenderName: "Digital Transformation Delivery Partner",
-    issuingBody: "NHS Shared Business Services",
-    submissionDeadline: "2026-07-18T17:00:00.000Z",
-    estimatedContractValue: 2400000,
-    status: "review",
-    readinessScore: 82,
-  },
-  {
-    id: "proj_2",
-    title: "Smart Mobility Analytics Platform",
-    tenderName: "Local Authority Smart Mobility RFQ",
-    issuingBody: "Greater Manchester Combined Authority",
-    submissionDeadline: "2026-06-29T12:00:00.000Z",
-    estimatedContractValue: 780000,
-    status: "in_progress",
-    readinessScore: 68,
-  },
-  {
-    id: "proj_3",
-    title: "Net Zero Capability Delivery",
-    tenderName: "ESG Advisory Services Grant",
-    issuingBody: "Innovate UK",
-    submissionDeadline: "2026-08-02T23:59:00.000Z",
-    estimatedContractValue: 350000,
-    status: "analyzing",
-    readinessScore: 41,
-  },
-];
-
-export const demoRequirements: RequirementItem[] = [
-  {
-    id: "req_1",
-    heading: "Technical capability",
-    requirement: "Demonstrate delivery of at least three enterprise transformation programmes within the last five years.",
-    mandatory: true,
-    owner: "Delivery Director",
-    responseStatus: "drafted",
-  },
-  {
-    id: "req_2",
-    heading: "Data security",
-    requirement: "Provide evidence of ISO 27001 certification and secure data handling controls.",
-    mandatory: true,
-    owner: "Security Lead",
-    responseStatus: "complete",
-  },
-  {
-    id: "req_3",
-    heading: "Social value",
-    requirement: "Outline measurable apprenticeships, local hiring, and carbon reduction commitments.",
-    mandatory: false,
-    owner: "ESG Manager",
-    responseStatus: "todo",
-  },
-];
-
-export const demoCompliance: ComplianceSnapshot = {
-  readinessScore: 82,
-  missingInformation: [
-    "Updated insurance schedule exceeding £10m professional indemnity cover",
-    "Named subcontractor cyber security attestations",
-  ],
-  riskWarnings: [
-    "Case study evidence is credible but not mapped to quantified healthcare outcomes.",
-    "Social value draft lacks borough-specific targets and named delivery partners.",
-  ],
-  checklist: [
-    { label: "Mandatory certifications uploaded", status: "complete" },
-    { label: "Pricing schedule reviewed", status: "warning" },
-    { label: "Executive sign-off ready", status: "missing" },
-  ],
-};
-
-export const demoResponses: GeneratedResponse[] = [
-  {
-    section: "Executive Summary",
-    content:
-      "Northstar Infrastructure Ltd provides a low-risk delivery model for complex transformation procurements, pairing regulated-sector delivery experience with ISO-accredited governance and measurable service improvement outcomes.",
-    sourceReferences: ["Healthcare Framework Case Study 2025", "ISO 27001 Certificate"],
-    supportingEvidence: [
-      "Regional healthcare transformation programme with quantified service improvements.",
-      "ISO 27001 certification covering secure delivery controls.",
-    ],
-    confidence: 92,
-  },
-  {
-    section: "Technical Response",
-    content:
-      "Our delivery model spans mobilisation, discovery, service design, implementation, and transition. Each stage is governed through weekly RAID reviews, benefits-tracking checkpoints, and named workstream accountability.",
-    sourceReferences: ["PMO Methodology Policy", "Integrated Mobilisation Playbook"],
-    supportingEvidence: ["Weekly RAID review cadence and named workstream accountability."],
-    confidence: 88,
-  },
-  {
-    section: "Social Value Response",
-    content:
-      "PursuitIQ recommends enriching this answer with location-specific apprenticeships, local SME spend, and carbon reporting baselines before final submission.",
-    sourceReferences: ["ESG Impact Report 2025"],
-    supportingEvidence: ["Existing ESG report provides broad impact data but lacks local targets."],
-    confidence: 73,
-  },
-];
 
 export function createBrowserSupabaseClient() {
   if (!hasSupabaseEnv()) return null;
@@ -284,7 +169,9 @@ export async function createServerSupabaseClient() {
 
 export async function getActiveOrganizationContext(): Promise<OrganizationProfile> {
   const supabase = await createServerSupabaseClient();
-  if (!supabase) return demoOrganization;
+  if (!supabase) {
+    redirect("/login");
+  }
 
   const { data: userData } = await supabase.auth.getUser();
   if (!userData?.user) {
@@ -317,23 +204,16 @@ export async function getActiveOrganizationContext(): Promise<OrganizationProfil
   return {
     id: data.id as string,
     companyName: data.company_name as string,
-    industry: (data.industry as string | null) ?? demoOrganization.industry,
-    website: (data.website as string | null) ?? demoOrganization.website,
-    employeeCount: (data.employee_count as string | null) ?? demoOrganization.employeeCount,
-    certifications: Array.isArray(data.certifications) ? (data.certifications as string[]) : demoOrganization.certifications,
-    location: (data.location as string | null) ?? demoOrganization.location,
+    industry: (data.industry as string | null) ?? "",
+    website: (data.website as string | null) ?? "",
+    employeeCount: (data.employee_count as string | null) ?? "",
+    certifications: Array.isArray(data.certifications) ? (data.certifications as string[]) : [],
+    location: (data.location as string | null) ?? "",
   };
 }
 
 export async function getAuthenticatedAppContext() {
   const organization = await getActiveOrganizationContext();
-  if (organization.id === "org_demo") {
-    return {
-      organization,
-      organizationId: undefined,
-      user: null,
-    };
-  }
   
   const serverSupabase = await createServerSupabaseClient();
   if (!serverSupabase) {
@@ -374,7 +254,7 @@ export async function getAuthenticatedAppContext() {
   
   return {
     organization,
-    organizationId: organization.id === "org_demo" ? undefined : organization.id,
+    organizationId: organization.id,
     user: userData.user,
   };
 }
@@ -446,10 +326,6 @@ export function heuristicRequirementExtraction(text: string): RequirementItem[] 
     .filter((line) => line.length > 20)
     .slice(0, 12);
 
-  if (lines.length === 0) {
-    return demoRequirements;
-  }
-
   return lines.map((line, index) => ({
     id: `req_${index + 1}`,
     heading: `Requirement ${index + 1}`,
@@ -520,7 +396,7 @@ export async function getRecentProject() {
 export async function runTenderAnalysis(text: string) {
   const requirements = heuristicRequirementExtraction(text);
   const compliance = buildComplianceSnapshot(requirements);
-  const responseDrafts = demoResponses;
+  const responseDrafts: GeneratedResponse[] = [];
 
   if (!hasOpenAIEnv()) {
     return {
@@ -551,10 +427,10 @@ export async function runTenderAnalysis(text: string) {
 
 export async function generateWorkspaceResponses(input: z.infer<typeof WorkspaceGenerationSchema>) {
   const supabase = createServiceSupabaseClient();
-  let selectedRequirements = demoRequirements.filter((item) => input.requirementIds.includes(item.id));
+  let selectedRequirements: RequirementItem[] = [];
   let organizationId: string | undefined;
-  let projectTitle = demoProjects[0].tenderName;
-  let knowledgeQueryContext = selectedRequirements.map((item) => `${item.heading}: ${item.requirement}`).join("\n");
+  let projectTitle = "Untitled Project";
+  let knowledgeQueryContext = "";
 
   if (supabase) {
     const [{ data: project }, { data: requirementRows }] = await Promise.all([
